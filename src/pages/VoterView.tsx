@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Building2, Users, MapPin, Check, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { 
+  initializeStorage, 
+  getCandidatesByCategory, 
+  hasVoted, 
+  registerVote,
+  getVoter,
+  type Candidate 
+} from "@/lib/storage";
 
 interface VoteCategory {
   id: string;
@@ -23,6 +31,27 @@ const VoterView = () => {
     { id: "congress", name: "Congresistas", icon: Users, voted: false },
     { id: "district", name: "Distrital", icon: MapPin, voted: false },
   ]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+
+  useEffect(() => {
+    initializeStorage();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && dni) {
+      // Load voter's voting status
+      const voter = getVoter(dni);
+      if (voter) {
+        setCategories(prev =>
+          prev.map(cat => ({
+            ...cat,
+            voted: voter.votedCategories.includes(cat.id),
+          }))
+        );
+      }
+    }
+  }, [isAuthenticated, dni]);
 
   const handleDniSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,13 +63,29 @@ const VoterView = () => {
     }
   };
 
-  const handleVote = (categoryId: string) => {
+  const handleCategoryClick = (categoryId: string) => {
+    if (hasVoted(dni, categoryId)) {
+      toast.error("Ya has votado en esta categoría");
+      return;
+    }
+    setSelectedCategory(categoryId);
+    setCandidates(getCandidatesByCategory(categoryId));
+  };
+
+  const handleVote = (candidateId: string) => {
+    if (!selectedCategory) return;
+    
+    registerVote(dni, selectedCategory, candidateId);
+    
     setCategories(prev =>
       prev.map(cat =>
-        cat.id === categoryId ? { ...cat, voted: true } : cat
+        cat.id === selectedCategory ? { ...cat, voted: true } : cat
       )
     );
+    
     toast.success("Voto registrado exitosamente");
+    setSelectedCategory(null);
+    setCandidates([]);
   };
 
   if (!isAuthenticated) {
@@ -94,6 +139,57 @@ const VoterView = () => {
 
   const allVoted = categories.every(cat => cat.voted);
 
+  // Candidate selection modal
+  if (selectedCategory && candidates.length > 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.05),rgba(255,255,255,0))]" />
+        
+        <div className="relative z-10 container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto space-y-8">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                  Selecciona tu Candidato
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                  {categories.find(c => c.id === selectedCategory)?.name}
+                </p>
+              </div>
+              <Button variant="outline" onClick={() => setSelectedCategory(null)}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Volver
+              </Button>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {candidates.map((candidate) => (
+                <Card
+                  key={candidate.id}
+                  className="p-6 bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-glow cursor-pointer group"
+                  onClick={() => handleVote(candidate.id)}
+                >
+                  <div className="space-y-4">
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto text-3xl font-bold text-primary">
+                      {candidate.name.charAt(0)}
+                    </div>
+                    <div className="text-center space-y-2">
+                      <h3 className="text-xl font-bold">{candidate.name}</h3>
+                      <p className="text-sm text-muted-foreground">{candidate.party}</p>
+                    </div>
+                    <Button className="w-full">
+                      Votar por {candidate.name.split(' ')[0]}
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.05),rgba(255,255,255,0))]" />
@@ -124,9 +220,10 @@ const VoterView = () => {
                   className={`p-6 bg-gradient-card border-border transition-all duration-300 animate-slide-up ${
                     category.voted
                       ? "border-primary shadow-glow"
-                      : "hover:border-primary hover:shadow-glow"
+                      : "hover:border-primary hover:shadow-glow cursor-pointer"
                   }`}
                   style={{ animationDelay: `${index * 0.1}s` }}
+                  onClick={() => !category.voted && handleCategoryClick(category.id)}
                 >
                   <div className="space-y-4">
                     <div className={`w-16 h-16 rounded-lg flex items-center justify-center mx-auto ${
@@ -149,7 +246,10 @@ const VoterView = () => {
                     <Button
                       className="w-full"
                       disabled={category.voted}
-                      onClick={() => handleVote(category.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCategoryClick(category.id);
+                      }}
                     >
                       {category.voted ? "Votado" : "Votar Ahora"}
                     </Button>
