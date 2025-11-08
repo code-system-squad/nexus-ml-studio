@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, ArrowLeft, Users, BarChart3, Settings, Brain, Trash2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Users, BarChart3, Settings, Brain, Trash2, RefreshCw, Plus, Edit, Power } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -14,20 +12,41 @@ import {
   getTopCandidates,
   deleteCandidate,
   resetSystem,
+  addCandidate,
+  updateCandidate,
   type Candidate,
 } from "@/lib/storage";
+import AdminLogin from "./AdminLogin";
+import DashboardVote from "@/components/DashboardVote"; // 👈 IMPORTAR EL NUEVO COMPONENTE
 
 const AdminView = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [stats, setStats] = useState({ totalVotes: 0, totalVoters: 0, votesByCategory: { presidential: 0, congress: 0, district: 0 } });
-  const [topCandidates, setTopCandidates] = useState<{ presidential: Candidate[], congress: Candidate[], district: Candidate[] }>({
+  const [stats, setStats] = useState({ 
+    totalVotes: 0, 
+    totalVoters: 0, 
+    votesByCategory: { presidential: 0, congress: 0, district: 0 } 
+  });
+  const [topCandidates, setTopCandidates] = useState<{ 
+    presidential: Candidate[], 
+    congress: Candidate[], 
+    district: Candidate[] 
+  }>({
     presidential: [],
     congress: [],
     district: [],
+  });
+
+  // Estados para el modal de edición/creación
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCandidate, setEditingCandidate] = useState<Candidate | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    party: "",
+    category: "presidential" as "presidential" | "congress" | "district",
+    enabled: true,
+    description: "",
   });
 
   useEffect(() => {
@@ -50,22 +69,84 @@ const AdminView = () => {
     });
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (username === "admin" && password === "admin123") {
-      setIsAuthenticated(true);
-      toast.success("Acceso autorizado");
-    } else {
-      toast.error("Credenciales inválidas");
-    }
-  };
-
   const handleDeleteCandidate = (id: string) => {
     if (confirm("¿Estás seguro de eliminar este candidato?")) {
       deleteCandidate(id);
       loadData();
       toast.success("Candidato eliminado");
     }
+  };
+
+  const handleToggleCandidate = (candidate: Candidate) => {
+    updateCandidate(candidate.id, { ...candidate, enabled: !candidate.enabled });
+    loadData();
+    toast.success(candidate.enabled ? "Candidato deshabilitado" : "Candidato habilitado");
+  };
+
+  const handleOpenModal = (candidate?: Candidate) => {
+    if (candidate) {
+      setEditingCandidate(candidate);
+      setFormData({
+        name: candidate.name,
+        party: candidate.party,
+        category: candidate.category,
+        enabled: candidate.enabled ?? true,
+        description: candidate.description ?? "",
+      });
+    } else {
+      setEditingCandidate(null);
+      setFormData({
+        name: "",
+        party: "",
+        category: "presidential",
+        enabled: true,
+        description: "",
+      });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingCandidate(null);
+    setFormData({
+      name: "",
+      party: "",
+      category: "presidential",
+      enabled: true,
+      description: "",
+    });
+  };
+
+  const handleSaveCandidate = () => {
+    if (!formData.name.trim() || !formData.party.trim()) {
+      toast.error("Por favor completa todos los campos");
+      return;
+    }
+
+    if (editingCandidate) {
+      updateCandidate(editingCandidate.id, {
+        ...editingCandidate,
+        name: formData.name,
+        party: formData.party,
+        category: formData.category,
+        enabled: formData.enabled,
+        description: formData.description,
+      });
+      toast.success("Candidato actualizado");
+    } else {
+      addCandidate({
+        name: formData.name,
+        party: formData.party,
+        category: formData.category,
+        enabled: formData.enabled,
+        description: formData.description,
+      });
+      toast.success("Candidato agregado");
+    }
+
+    loadData();
+    handleCloseModal();
   };
 
   const handleResetSystem = () => {
@@ -76,68 +157,8 @@ const AdminView = () => {
     }
   };
 
-  const participation = stats.totalVoters > 0 ? ((stats.totalVotes / (stats.totalVoters * 3)) * 100).toFixed(1) : "0";
-
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),rgba(255,255,255,0))]" />
-        
-        <Card className="relative z-10 w-full max-w-md p-8 bg-gradient-card border-border animate-fade-in">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/')}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
-          </Button>
-
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto">
-                <Shield className="w-8 h-8 text-accent" />
-              </div>
-              <h2 className="text-3xl font-bold">Panel Administrativo</h2>
-              <p className="text-muted-foreground">Acceso restringido</p>
-            </div>
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Usuario</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="admin"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-
-              <Button type="submit" className="w-full" size="lg">
-                Iniciar Sesión
-              </Button>
-            </form>
-
-            <p className="text-xs text-center text-muted-foreground">
-              Demo: usuario "admin" / contraseña "admin123"
-            </p>
-          </div>
-        </Card>
-      </div>
-    );
+    return <AdminLogin onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
 
   return (
@@ -181,118 +202,109 @@ const AdminView = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid md:grid-cols-3 gap-6">
-                <Card className="p-6 bg-gradient-card border-border">
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Total de Votos</p>
-                    <p className="text-4xl font-bold text-primary">{stats.totalVotes}</p>
-                    <p className="text-xs text-muted-foreground">Registrados en el sistema</p>
-                  </div>
-                </Card>
-
-                <Card className="p-6 bg-gradient-card border-border">
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Votantes</p>
-                    <p className="text-4xl font-bold text-accent">{stats.totalVoters}</p>
-                    <p className="text-xs text-muted-foreground">DNIs únicos</p>
-                  </div>
-                </Card>
-
-                <Card className="p-6 bg-gradient-card border-border">
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Participación</p>
-                    <p className="text-4xl font-bold text-primary">{participation}%</p>
-                    <p className="text-xs text-muted-foreground">Promedio en categorías</p>
-                  </div>
-                </Card>
-              </div>
-
-              <div className="space-y-6">
-                {[
-                  { title: "Presidencial", data: topCandidates.presidential },
-                  { title: "Congresistas", data: topCandidates.congress },
-                  { title: "Distrital", data: topCandidates.district },
-                ].map((category) => {
-                  const totalVotes = category.data.reduce((sum, c) => sum + c.votes, 0);
-                  return (
-                    <Card key={category.title} className="p-6 bg-gradient-card border-border">
-                      <h3 className="text-xl font-bold mb-4">{category.title}</h3>
-                      <div className="space-y-4">
-                        {category.data.length > 0 ? (
-                          category.data.map((candidate) => {
-                            const percentage = totalVotes > 0 ? ((candidate.votes / totalVotes) * 100).toFixed(1) : "0";
-                            return (
-                              <div key={candidate.id} className="space-y-2">
-                                <div className="flex justify-between text-sm">
-                                  <span className="font-medium">{candidate.name}</span>
-                                  <span className="text-primary font-bold">
-                                    {candidate.votes} votos ({percentage}%)
-                                  </span>
-                                </div>
-                                <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full bg-gradient-primary transition-all duration-500"
-                                    style={{ width: `${percentage}%` }}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <p className="text-muted-foreground text-center py-4">No hay datos disponibles</p>
-                        )}
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
+            {/* TAB: Resumen - AHORA USA EL COMPONENTE DASHBOARDVOTE */}
+            <TabsContent value="overview">
+              <DashboardVote 
+                candidates={candidates}
+                stats={stats}
+                topCandidates={topCandidates}
+              />
             </TabsContent>
 
+            {/* TAB: Candidatos */}
             <TabsContent value="candidates" className="space-y-6">
+              <div className="flex justify-end mb-4">
+                <Button onClick={() => handleOpenModal()}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Agregar Candidato
+                </Button>
+              </div>
+
               {['presidential', 'congress', 'district'].map((category) => {
-                const categoryName = category === 'presidential' ? 'Presidencial' : category === 'congress' ? 'Congresistas' : 'Distrital';
+                const categoryName = category === 'presidential' 
+                  ? 'Presidencial' 
+                  : category === 'congress' 
+                  ? 'Congresistas' 
+                  : 'Distrital';
                 const categoryCandidates = candidates.filter(c => c.category === category);
                 
                 return (
                   <Card key={category} className="p-6 bg-gradient-card border-border">
                     <h3 className="text-xl font-bold mb-4">{categoryName}</h3>
                     <div className="space-y-3">
-                      {categoryCandidates.map((candidate) => (
-                        <div
-                          key={candidate.id}
-                          className="flex items-center justify-between p-4 bg-card rounded-lg border border-border"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
-                              {candidate.name.charAt(0)}
+                      {categoryCandidates.length > 0 ? (
+                        categoryCandidates.map((candidate) => (
+                          <div
+                            key={candidate.id}
+                            className={`flex items-center justify-between p-4 bg-card rounded-lg border border-border transition-opacity ${
+                              candidate.enabled === false ? 'opacity-50' : ''
+                            }`}
+                          >
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-xl font-bold text-primary flex-shrink-0">
+                                {candidate.name.charAt(0)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold flex items-center gap-2">
+                                  {candidate.name}
+                                  {candidate.enabled === false && (
+                                    <span className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded">
+                                      Deshabilitado
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-sm text-muted-foreground">{candidate.party}</p>
+                                {candidate.description && (
+                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                    {candidate.description}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-bold">{candidate.name}</p>
-                              <p className="text-sm text-muted-foreground">{candidate.party}</p>
+                            <div className="flex items-center gap-2">
+                              <div className="text-right mr-2">
+                                <p className="text-2xl font-bold text-primary">{candidate.votes}</p>
+                                <p className="text-xs text-muted-foreground">votos</p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleToggleCandidate(candidate)}
+                                title={candidate.enabled ? "Deshabilitar" : "Habilitar"}
+                              >
+                                <Power className={`w-4 h-4 ${candidate.enabled !== false ? 'text-green-500' : 'text-muted-foreground'}`} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenModal(candidate)}
+                                title="Editar"
+                              >
+                                <Edit className="w-4 h-4 text-primary" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteCandidate(candidate.id)}
+                                title="Eliminar"
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <p className="text-2xl font-bold text-primary">{candidate.votes}</p>
-                              <p className="text-xs text-muted-foreground">votos</p>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteCandidate(candidate.id)}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground text-center py-4">
+                          No hay candidatos en esta categoría
+                        </p>
+                      )}
                     </div>
                   </Card>
                 );
               })}
             </TabsContent>
 
+            {/* TAB: Configuración */}
             <TabsContent value="settings" className="space-y-6">
               <Card className="p-6 bg-gradient-card border-border">
                 <div className="space-y-6">
@@ -337,9 +349,22 @@ const AdminView = () => {
                     <div className="p-4 bg-card rounded-lg border border-border">
                       <h4 className="font-bold mb-2">Estado de localStorage</h4>
                       <div className="space-y-2 text-sm">
-                        <p><span className="text-muted-foreground">Total Candidatos:</span> <span className="font-bold">{candidates.length}</span></p>
-                        <p><span className="text-muted-foreground">Total Votantes:</span> <span className="font-bold">{stats.totalVoters}</span></p>
-                        <p><span className="text-muted-foreground">Total Votos:</span> <span className="font-bold">{stats.totalVotes}</span></p>
+                        <p>
+                          <span className="text-muted-foreground">Total Candidatos:</span>{" "}
+                          <span className="font-bold">{candidates.length}</span>
+                        </p>
+                        <p>
+                          <span className="text-muted-foreground">Candidatos Habilitados:</span>{" "}
+                          <span className="font-bold">{candidates.filter(c => c.enabled !== false).length}</span>
+                        </p>
+                        <p>
+                          <span className="text-muted-foreground">Total Votantes:</span>{" "}
+                          <span className="font-bold">{stats.totalVoters}</span>
+                        </p>
+                        <p>
+                          <span className="text-muted-foreground">Total Votos:</span>{" "}
+                          <span className="font-bold">{stats.totalVotes}</span>
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -347,6 +372,7 @@ const AdminView = () => {
               </Card>
             </TabsContent>
 
+            {/* TAB: Machine Learning */}
             <TabsContent value="ml" className="space-y-6">
               <Card className="p-6 bg-gradient-card border-border">
                 <div className="space-y-6">
@@ -420,6 +446,87 @@ const AdminView = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Modal de Edición/Creación */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md p-6 bg-card border-border max-h-[90vh] overflow-y-auto">
+            <h3 className="text-2xl font-bold mb-4">
+              {editingCandidate ? "Editar Candidato" : "Agregar Candidato"}
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Nombre</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Nombre del candidato"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Partido</label>
+                <input
+                  type="text"
+                  value={formData.party}
+                  onChange={(e) => setFormData({ ...formData, party: e.target.value })}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Partido político"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Descripción</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  placeholder="Propuestas y descripción del candidato"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Categoría</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value as "presidential" | "congress" | "district" })}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="presidential">Presidencial</option>
+                  <option value="congress">Congresistas</option>
+                  <option value="district">Distrital</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="enabled"
+                  checked={formData.enabled}
+                  onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="enabled" className="text-sm font-medium">
+                  Candidato habilitado
+                </label>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button variant="outline" onClick={handleCloseModal} className="flex-1">
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveCandidate} className="flex-1">
+                  {editingCandidate ? "Guardar Cambios" : "Agregar"}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

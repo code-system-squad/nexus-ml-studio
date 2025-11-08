@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,32 +7,136 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Droplet, TrendingUp, AlertCircle } from "lucide-react";
+import { useData } from "@/contexts/DataContext";
+import { useToast } from "@/hooks/use-toast";
 
 const DataCleaning = () => {
   const navigate = useNavigate();
-  const [selectedColumns, setSelectedColumns] = useState<string[]>(["age", "income", "score"]);
+  const { toast } = useToast();
+  const { rawData, setCleanedData } = useData();
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
 
-  // Mock data
-  const mockData = [
-    { id: 1, age: 25, income: 50000, score: 85.5, category: "A" },
-    { id: 2, age: 32, income: 75000, score: 92.3, category: "B" },
-    { id: 3, age: 28, income: 60000, score: 78.9, category: "A" },
-    { id: 4, age: 45, income: 95000, score: 88.7, category: "C" },
-  ];
+  // Obtener las columnas disponibles del dataset
+  const availableColumns = useMemo(() => {
+    if (!rawData || rawData.length === 0) return [];
+    return Object.keys(rawData[0]);
+  }, [rawData]);
 
-  const columns = ["age", "income", "score", "category"];
-  const stats = {
-    totalRows: 10000,
-    missingValues: 234,
-    duplicates: 12,
-    outliers: 45,
-  };
+  // Inicializar columnas seleccionadas con todas las columnas disponibles
+  useEffect(() => {
+    if (availableColumns.length > 0 && selectedColumns.length === 0) {
+      setSelectedColumns(availableColumns);
+    }
+  }, [availableColumns, selectedColumns.length]);
+
+  // Calcular estadísticas del dataset
+  const stats = useMemo(() => {
+    if (!rawData) {
+      return {
+        totalRows: 0,
+        missingValues: 0,
+        duplicates: 0,
+        outliers: 0,
+      };
+    }
+
+    const totalRows = rawData.length;
+    let missingValues = 0;
+
+    // Contar valores faltantes (null, undefined, empty string)
+    rawData.forEach(row => {
+      Object.values(row).forEach(value => {
+        if (value === null || value === undefined || value === "") {
+          missingValues++;
+        }
+      });
+    });
+
+    // Detectar duplicados (simplificado)
+    const uniqueRows = new Set(rawData.map(row => JSON.stringify(row)));
+    const duplicates = totalRows - uniqueRows.size;
+
+    return {
+      totalRows,
+      missingValues,
+      duplicates,
+      outliers: 0,
+    };
+  }, [rawData]);
+
+  // Obtener primeras 5 filas para preview
+  const previewData = useMemo(() => {
+    if (!rawData) return [];
+    return rawData.slice(0, 5);
+  }, [rawData]);
 
   const toggleColumn = (column: string) => {
-    setSelectedColumns(prev =>
-      prev.includes(column) ? prev.filter(c => c !== column) : [...prev, column]
-    );
+    setSelectedColumns(prev => {
+      const isCurrentlySelected = prev.includes(column);
+      
+      if (isCurrentlySelected) {
+        // Si está seleccionada, la removemos
+        return prev.filter(c => c !== column);
+      } else {
+        // Si no está seleccionada, la agregamos
+        return [...prev, column];
+      }
+    });
   };
+
+  const handleContinue = () => {
+    if (!rawData) {
+      toast({
+        title: "Error",
+        description: "No hay datos para limpiar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedColumns.length === 0) {
+      toast({
+        title: "Error",
+        description: "Debes seleccionar al menos una columna",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Filtrar datos solo con las columnas seleccionadas
+    const cleaned = rawData.map(row => {
+      const cleanedRow: Record<string, string | number | boolean | null | undefined> = {};
+      selectedColumns.forEach(col => {
+        cleanedRow[col] = row[col];
+      });
+      return cleanedRow;
+    });
+
+    setCleanedData(cleaned);
+    
+    toast({
+      title: "Datos limpiados",
+      description: `Dataset preparado con ${selectedColumns.length} columnas`,
+    });
+
+    navigate("/train");
+  };
+
+  // Redirigir si no hay datos
+  useEffect(() => {
+    if (!rawData || rawData.length === 0) {
+      toast({
+        title: "No hay datos",
+        description: "Por favor, carga un archivo CSV primero",
+        variant: "destructive",
+      });
+      navigate("/upload");
+    }
+  }, [rawData, navigate, toast]);
+
+  if (!rawData) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background p-6 animate-fade-in">
@@ -68,7 +172,7 @@ const DataCleaning = () => {
               <div className="text-2xl font-bold">{stats.missingValues}</div>
               <p className="text-xs text-muted-foreground flex items-center mt-1">
                 <AlertCircle className="w-3 h-3 mr-1" />
-                {((stats.missingValues / stats.totalRows) * 100).toFixed(2)}% del total
+                {stats.totalRows > 0 ? ((stats.missingValues / (stats.totalRows * availableColumns.length)) * 100).toFixed(2) : 0}% del total
               </p>
             </CardContent>
           </Card>
@@ -109,18 +213,21 @@ const DataCleaning = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {columns.map((column) => (
-                <div key={column} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={column}
-                    checked={selectedColumns.includes(column)}
-                    onCheckedChange={() => toggleColumn(column)}
-                  />
-                  <Label htmlFor={column} className="cursor-pointer capitalize">
-                    {column}
-                  </Label>
-                </div>
-              ))}
+              {availableColumns.map((column) => {
+                const isChecked = selectedColumns.includes(column);
+                return (
+                  <div key={column} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={column}
+                      checked={isChecked}
+                      onCheckedChange={() => toggleColumn(column)}
+                    />
+                    <Label htmlFor={column} className="cursor-pointer capitalize">
+                      {column}
+                    </Label>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -137,22 +244,20 @@ const DataCleaning = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>ID</TableHead>
                     {selectedColumns.map((col) => (
                       <TableHead key={col} className="capitalize">{col}</TableHead>
                     ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockData.map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell className="font-medium">{row.id}</TableCell>
+                  {previewData.map((row, index) => (
+                    <TableRow key={index}>
                       {selectedColumns.map((col) => (
                         <TableCell key={col}>
-                          {col === "category" ? (
-                            <Badge variant="secondary">{row[col as keyof typeof row]}</Badge>
+                          {typeof row[col] === 'string' && row[col] ? (
+                            <Badge variant="secondary">{String(row[col])}</Badge>
                           ) : (
-                            row[col as keyof typeof row]
+                            String(row[col] ?? 'N/A')
                           )}
                         </TableCell>
                       ))}
@@ -168,7 +273,7 @@ const DataCleaning = () => {
           <Button variant="outline" onClick={() => navigate("/upload")}>
             Volver
           </Button>
-          <Button size="lg" onClick={() => navigate("/train")} className="shadow-glow">
+          <Button size="lg" onClick={handleContinue} className="shadow-glow">
             Continuar a Entrenamiento
           </Button>
         </div>
