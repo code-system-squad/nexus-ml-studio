@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield } from "lucide-react";
+import { Shield, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -39,6 +39,18 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
 
       {/* Contenido */}
       <div className="relative z-10 w-full max-w-md">
+        {/* Botón de Volver */}
+        <div className="mb-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/')}
+            className="text-white hover:text-red-500 hover:bg-white/10 transition-all duration-300"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver
+          </Button>
+        </div>
+
         <Card className="p-8 bg-gradient-to-br from-neutral-900/95 to-neutral-950/95 backdrop-blur-xl rounded-3xl border border-neutral-800" style={{
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
         }}>

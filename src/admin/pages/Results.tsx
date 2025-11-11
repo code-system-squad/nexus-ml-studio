@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useNavigate } from "react-router-dom";
-import { Download, TrendingUp, CheckCircle, Clock, BarChart3 } from "lucide-react";
+import { Download, TrendingUp, CheckCircle, Clock, BarChart3, FileDown, ArrowLeft } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
@@ -60,6 +60,117 @@ const Results = () => {
     return names[framework] || framework;
   };
 
+  // Función para exportar resultados como CSV
+  const handleExportCSV = () => {
+    try {
+      // Crear contenido CSV con métricas y historial
+      let csvContent = "REPORTE DE RESULTADOS DEL MODELO\n\n";
+      
+      // Información del modelo
+      csvContent += "INFORMACIÓN DEL MODELO\n";
+      csvContent += `Framework,${getFrameworkName(trainingConfig.framework)}\n`;
+      csvContent += `Algoritmo,${getModelName(trainingConfig.modelType)}\n`;
+      csvContent += `Dataset,${fileName || 'datos.csv'}\n`;
+      csvContent += `Tamaño del dataset,${cleanedData?.length || 0} filas\n`;
+      csvContent += `Tiempo de entrenamiento,${trainingTime}\n`;
+      csvContent += `Épocas,${trainingConfig.epochs}\n`;
+      csvContent += `Batch Size,${trainingConfig.batchSize}\n`;
+      csvContent += `Learning Rate,${trainingConfig.learningRate}\n`;
+      csvContent += `Train/Test Split,${trainingConfig.trainSplit}% / ${trainingConfig.testSplit}%\n\n`;
+      
+      // Métricas principales
+      csvContent += "MÉTRICAS PRINCIPALES\n";
+      csvContent += "Métrica,Valor\n";
+      csvContent += `Accuracy,${metrics.accuracy}%\n`;
+      csvContent += `Precision,${metrics.precision}%\n`;
+      csvContent += `Recall,${metrics.recall}%\n`;
+      csvContent += `F1 Score,${metrics.f1Score}%\n\n`;
+      
+      // Historial de entrenamiento
+      csvContent += "HISTORIAL DE ENTRENAMIENTO\n";
+      csvContent += "Época,Loss,Accuracy,Val Loss,Val Accuracy\n";
+      trainingHistory.forEach((row) => {
+        csvContent += `${row.epoch},${row.loss.toFixed(4)},${row.accuracy.toFixed(2)}%,${row.valLoss.toFixed(4)},${row.valAccuracy.toFixed(2)}%\n`;
+      });
+
+      // Crear blob y descargar
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `resultados_modelo_${new Date().getTime()}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Exportación exitosa",
+        description: "Los resultados se han descargado en formato CSV",
+      });
+    } catch (error) {
+      toast({
+        title: "Error al exportar",
+        description: "No se pudo generar el archivo CSV",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Función para descargar reporte JSON completo
+  const handleDownloadJSON = () => {
+    try {
+      const reportData = {
+        generatedAt: new Date().toISOString(),
+        modelInfo: {
+          framework: getFrameworkName(trainingConfig.framework),
+          algorithm: getModelName(trainingConfig.modelType),
+          dataset: fileName || 'datos.csv',
+          datasetSize: cleanedData?.length || 0,
+          trainingTime: trainingTime,
+        },
+        configuration: {
+          epochs: trainingConfig.epochs,
+          batchSize: trainingConfig.batchSize,
+          learningRate: trainingConfig.learningRate,
+          trainSplit: trainingConfig.trainSplit,
+          testSplit: trainingConfig.testSplit,
+        },
+        metrics: {
+          accuracy: metrics.accuracy,
+          precision: metrics.precision,
+          recall: metrics.recall,
+          f1Score: metrics.f1Score,
+        },
+        trainingHistory: trainingHistory,
+      };
+
+      const jsonString = JSON.stringify(reportData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `reporte_completo_${new Date().getTime()}.json`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Descarga exitosa",
+        description: "El reporte completo se ha descargado en formato JSON",
+      });
+    } catch (error) {
+      toast({
+        title: "Error al descargar",
+        description: "No se pudo generar el archivo JSON",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Datos para el gráfico de radar (métricas)
   const metricsRadarData = [
     { metric: 'Accuracy', value: metrics.accuracy, fullMark: 100 },
@@ -88,10 +199,16 @@ const Results = () => {
               Métricas de rendimiento y análisis del entrenamiento
             </p>
           </div>
-          <Badge variant="secondary" className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" />
-            Entrenamiento Completo
-          </Badge>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/admin')}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Volver
+            </Button>
+            <Badge variant="secondary" className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" />
+              Entrenamiento Completo
+            </Badge>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -385,13 +502,17 @@ const Results = () => {
         </Card>
 
         <div className="flex justify-between">
-          <Button variant="outline" onClick={() => navigate("/")}>
+          <Button variant="outline" onClick={() => navigate("/admin")}>
             Volver al Dashboard
           </Button>
-          <div className="space-x-2">
-            <Button variant="outline">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportCSV}>
               <Download className="w-4 h-4 mr-2" />
               Exportar Resultados
+            </Button>
+            <Button variant="outline" onClick={handleDownloadJSON}>
+              <FileDown className="w-4 h-4 mr-2" />
+              Descargar Reporte
             </Button>
             <Button onClick={() => navigate("/train")} className="shadow-glow">
               Entrenar Nuevo Modelo

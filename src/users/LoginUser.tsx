@@ -36,6 +36,16 @@ const LoginUser = ({ onLoginSuccess }: LoginUserProps) => {
       />
       <div className="absolute inset-0 bg-black/70" />
 
+      {/* Botón de Volver */}
+      <Button
+        onClick={() => navigate(-1)}
+        className="absolute top-6 left-6 z-20 bg-neutral-800/80 hover:bg-neutral-700/80 text-white backdrop-blur-sm rounded-xl px-4 py-2 transition-all duration-300 flex items-center gap-2"
+        style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Volver
+      </Button>
+
       {/* Contenido */}
       <div className="relative z-10 w-full max-w-md">
         <Card className="p-8 bg-gradient-to-br from-neutral-900/95 to-neutral-950/95 backdrop-blur-xl rounded-3xl border border-neutral-800" style={{

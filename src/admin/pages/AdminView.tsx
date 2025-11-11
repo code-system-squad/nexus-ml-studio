@@ -23,7 +23,10 @@ import CategoriesManagement from "./CategoriesManagement";
 
 const AdminView = () => {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // ✅ CAMBIO 1: Leer el estado de autenticación desde localStorage
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('adminAuth') === 'true';
+  });
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [stats, setStats] = useState({ 
     totalVotes: 0, 
@@ -198,8 +201,19 @@ const AdminView = () => {
     }
   };
 
+  // ✅ CAMBIO 3: Nueva función para cerrar sesión
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('adminAuth');
+    navigate('/');
+  };
+
+  // ✅ CAMBIO 2: Guardar en localStorage al iniciar sesión
   if (!isAuthenticated) {
-    return <AdminLogin onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return <AdminLogin onLoginSuccess={() => {
+      setIsAuthenticated(true);
+      localStorage.setItem('adminAuth', 'true');
+    }} />;
   }
 
   return (
@@ -211,12 +225,13 @@ const AdminView = () => {
           {/* Header */}
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold text-white">
                 Panel Administrativo
               </h1>
               <p className="text-muted-foreground mt-2">Sistema de gestión electoral</p>
             </div>
-            <Button variant="outline" onClick={() => navigate('/')}>
+            {/* ✅ CAMBIO 4: Botón Salir con la nueva función */}
+            <Button variant="outline" onClick={handleLogout}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Salir
             </Button>

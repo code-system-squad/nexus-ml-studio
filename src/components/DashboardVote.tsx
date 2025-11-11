@@ -15,7 +15,38 @@ import {
 } from "recharts";
 import type { Candidate } from "@/lib/storage";
 
-const COLORS = ["#7877C6", "#5E5BA8", "#4A478A", "#36336C", "#22204E", "#8B89D6", "#6F6DB5"];
+// Paleta de colores vibrantes para gráficos
+const CATEGORY_COLORS = {
+  presidential: "#3B82F6",  // Azul brillante
+  congress: "#A855F7",      // Púrpura
+  district: "#10B981",      // Verde esmeralda
+};
+
+const PIE_COLORS = ["#3B82F6", "#A855F7", "#10B981"];
+
+const TOP_CANDIDATES_GRADIENT = [
+  "#3B82F6", // Azul
+  "#6366F1", // Índigo
+  "#8B5CF6", // Violeta
+  "#A855F7", // Púrpura
+  "#C026D3", // Fucsia
+  "#DB2777", // Rosa
+  "#F43F5E", // Rojo-rosa
+  "#F59E0B", // Ámbar
+  "#10B981", // Verde
+  "#06B6D4", // Cyan
+];
+
+const PARTY_COLORS = [
+  "#3B82F6", // Azul
+  "#8B5CF6", // Violeta
+  "#10B981", // Verde
+  "#F59E0B", // Ámbar
+  "#EF4444", // Rojo
+  "#EC4899", // Rosa
+  "#06B6D4", // Cyan
+  "#6366F1", // Índigo
+];
 
 interface DashboardVoteProps {
   candidates: Candidate[];
@@ -43,9 +74,21 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
 
   // Preparar datos para gráfico de barras por categoría
   const categoryData = [
-    { name: "Presidencial", votos: stats.votesByCategory.presidential },
-    { name: "Congresistas", votos: stats.votesByCategory.congress },
-    { name: "Distrital", votos: stats.votesByCategory.district },
+    { 
+      name: "Presidencial", 
+      votos: stats.votesByCategory.presidential,
+      fill: CATEGORY_COLORS.presidential 
+    },
+    { 
+      name: "Congresistas", 
+      votos: stats.votesByCategory.congress,
+      fill: CATEGORY_COLORS.congress 
+    },
+    { 
+      name: "Distrital", 
+      votos: stats.votesByCategory.district,
+      fill: CATEGORY_COLORS.district 
+    },
   ];
 
   // Preparar datos para gráfico circular por categoría
@@ -55,10 +98,11 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
   const topCandidatesOverall = [...candidates]
     .sort((a, b) => b.votes - a.votes)
     .slice(0, 10)
-    .map((c) => ({
+    .map((c, index) => ({
       name: c.name.length > 20 ? c.name.substring(0, 20) + "..." : c.name,
       votos: c.votes,
       partido: c.party,
+      fill: TOP_CANDIDATES_GRADIENT[index % TOP_CANDIDATES_GRADIENT.length],
     }));
 
   // Preparar datos para gráfico de votos por partido
@@ -84,9 +128,9 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Total de Votos</p>
-              <BarChart3 className="w-5 h-5 text-primary opacity-50" />
+              <BarChart3 className="w-5 h-5 text-blue-500 opacity-50" />
             </div>
-            <p className="text-4xl font-bold text-primary">{stats.totalVotes}</p>
+            <p className="text-4xl font-bold text-blue-500">{stats.totalVotes}</p>
             <p className="text-xs text-muted-foreground">
               Registrados en el sistema
             </p>
@@ -97,9 +141,9 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Votantes</p>
-              <Users className="w-5 h-5 text-accent opacity-50" />
+              <Users className="w-5 h-5 text-purple-500 opacity-50" />
             </div>
-            <p className="text-4xl font-bold text-accent">{stats.totalVoters}</p>
+            <p className="text-4xl font-bold text-purple-500">{stats.totalVoters}</p>
             <p className="text-xs text-muted-foreground">DNIs únicos</p>
           </div>
         </Card>
@@ -108,9 +152,9 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">Participación</p>
-              <TrendingUp className="w-5 h-5 text-primary opacity-50" />
+              <TrendingUp className="w-5 h-5 text-green-500 opacity-50" />
             </div>
-            <p className="text-4xl font-bold text-primary">{participation}%</p>
+            <p className="text-4xl font-bold text-green-500">{participation}%</p>
             <p className="text-xs text-muted-foreground">
               Promedio en categorías
             </p>
@@ -138,7 +182,11 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
                   borderRadius: "8px",
                 }}
               />
-              <Bar dataKey="votos" fill="#7877C6" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="votos" radius={[8, 8, 0, 0]}>
+                {categoryData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -167,7 +215,7 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
                   {categoryDistribution.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+                      fill={PIE_COLORS[index % PIE_COLORS.length]}
                     />
                   ))}
                 </Pie>
@@ -231,7 +279,11 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
                   return null;
                 }}
               />
-              <Bar dataKey="votos" fill="#7877C6" radius={[0, 8, 8, 0]} />
+              <Bar dataKey="votos" radius={[0, 8, 8, 0]}>
+                {topCandidatesOverall.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -261,7 +313,7 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
                 {partyData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
+                    fill={PARTY_COLORS[index % PARTY_COLORS.length]}
                   />
                 ))}
               </Pie>
@@ -280,9 +332,21 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
       {/* Resultados por Categoría */}
       <div className="space-y-6">
         {[
-          { title: "Presidencial", data: topCandidates.presidential },
-          { title: "Congresistas", data: topCandidates.congress },
-          { title: "Distrital", data: topCandidates.district },
+          { 
+            title: "Presidencial", 
+            data: topCandidates.presidential,
+            gradient: "from-blue-500 to-blue-600"
+          },
+          { 
+            title: "Congresistas", 
+            data: topCandidates.congress,
+            gradient: "from-purple-500 to-purple-600"
+          },
+          { 
+            title: "Distrital", 
+            data: topCandidates.district,
+            gradient: "from-green-500 to-green-600"
+          },
         ].map((category) => {
           const totalVotes = category.data.reduce((sum, c) => sum + c.votes, 0);
           return (
@@ -308,7 +372,7 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
                         </div>
                         <div className="h-2 bg-secondary rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-primary transition-all duration-500"
+                            className={`h-full bg-gradient-to-r ${category.gradient} transition-all duration-500`}
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
@@ -337,14 +401,23 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
             {
               category: "Presidencial",
               votes: stats.votesByCategory.presidential,
+              gradient: "from-blue-500 to-blue-600",
+              bg: "bg-blue-500/10",
+              text: "text-blue-600 dark:text-blue-400"
             },
             {
               category: "Congresistas",
               votes: stats.votesByCategory.congress,
+              gradient: "from-purple-500 to-purple-600",
+              bg: "bg-purple-500/10",
+              text: "text-purple-600 dark:text-purple-400"
             },
             {
               category: "Distrital",
               votes: stats.votesByCategory.district,
+              gradient: "from-green-500 to-green-600",
+              bg: "bg-green-500/10",
+              text: "text-green-600 dark:text-green-400"
             },
           ].map((cat) => {
             const percentage =
@@ -354,12 +427,12 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
             return (
               <div
                 key={cat.category}
-                className="p-4 bg-card rounded-lg border border-border"
+                className={`p-4 ${cat.bg} rounded-lg border border-border`}
               >
                 <p className="text-sm text-muted-foreground mb-2">
                   {cat.category}
                 </p>
-                <p className="text-3xl font-bold text-primary mb-2">
+                <p className={`text-3xl font-bold ${cat.text} mb-2`}>
                   {percentage}%
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -367,7 +440,7 @@ const DashboardVote = ({ candidates, stats, topCandidates }: DashboardVoteProps)
                 </p>
                 <div className="mt-3 h-2 bg-secondary rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-primary transition-all duration-500"
+                    className={`h-full bg-gradient-to-r ${cat.gradient} transition-all duration-500`}
                     style={{ width: `${percentage}%` }}
                   />
                 </div>

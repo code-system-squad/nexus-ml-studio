@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, FileCheck } from "lucide-react";
+import { Upload, FileCheck, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useData } from "@/contexts/DataContext";
@@ -101,13 +101,19 @@ const DataUpload = () => {
   return (
     <div className="min-h-screen bg-background p-6 animate-fade-in">
       <div className="max-w-4xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Cargar Datos
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Importa tus datos desde CSV
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Cargar Datos
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Importa tus datos desde CSV
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => navigate('/admin')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver
+          </Button>
         </div>
 
         <Card className="border-border bg-gradient-card">
