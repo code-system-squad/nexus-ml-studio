@@ -3,26 +3,25 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield } from "lucide-react";
+import { Building2, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-interface AdminLoginProps {
-  onLoginSuccess: () => void;
+interface LoginUserProps {
+  onLoginSuccess: (dni: string) => void;
 }
 
-const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
+const LoginUser = ({ onLoginSuccess }: LoginUserProps) => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [dni, setDni] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleDniSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === "admin" && password === "admin123") {
-      onLoginSuccess();
+    if (dni.length === 8) {
+      onLoginSuccess(dni);
       toast.success("Acceso autorizado");
     } else {
-      toast.error("Credenciales inválidas");
+      toast.error("DNI inválido. Debe contener 8 dígitos");
     }
   };
 
@@ -46,58 +45,48 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
             {/* Icono y título */}
             <div className="text-center space-y-4">
               <div className="relative w-20 h-20 mx-auto">
-                <div className="absolute inset-0 rounded-[20px] bg-red-500/40 blur-2xl" />
-                <div className="relative w-20 h-20 rounded-[20px] bg-red-600 flex items-center justify-center shadow-2xl">
-                  <Shield className="w-10 h-10 text-white" strokeWidth={2} />
+                <div className="absolute inset-0 rounded-2xl bg-red-500/40 blur-2xl" />
+                <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-2xl">
+                  <svg 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    className="w-10 h-10"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect x="4" y="4" width="16" height="16" rx="2" stroke="white" strokeWidth="2" fill="none"/>
+                    <path d="M8 10h8M8 14h5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                    <circle cx="16" cy="8" r="1.5" fill="white"/>
+                  </svg>
                 </div>
               </div>
 
               <h2 className="text-3xl font-bold text-white tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                Panel Administrativo
+                Ingreso de Votante
               </h2>
               <p className="text-neutral-400 text-sm" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                Acceso restringido al sistema de gestión electoral
+                Ingresa tu DNI para continuar con el proceso de votación
               </p>
             </div>
 
             {/* Formulario */}
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleDniSubmit} className="space-y-5">
               <div className="space-y-3">
                 <Label 
-                  htmlFor="username" 
+                  htmlFor="dni" 
                   className="text-neutral-300 text-sm font-medium flex items-center gap-2" 
                   style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
                 >
                   <span className="text-red-500 text-xs">●</span>
-                  Usuario
+                  Documento Nacional de Identidad
                 </Label>
                 <Input
-                  id="username"
+                  id="dni"
                   type="text"
-                  placeholder="admin"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="bg-black/30 border-2 border-neutral-800 text-white placeholder:text-neutral-600 focus:border-red-500 focus:ring-0 rounded-xl h-12 transition-all duration-300"
-                  style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-                />
-              </div>
-
-              <div className="space-y-3">
-                <Label 
-                  htmlFor="password" 
-                  className="text-neutral-300 text-sm font-medium flex items-center gap-2" 
-                  style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-                >
-                  <span className="text-red-500 text-xs">●</span>
-                  Contraseña
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-black/30 border-2 border-neutral-800 text-white placeholder:text-neutral-600 focus:border-red-500 focus:ring-0 rounded-xl h-12 transition-all duration-300"
+                  placeholder="1 2 3 4 5 6 7 8"
+                  maxLength={8}
+                  value={dni.split('').join(' ')}
+                  onChange={(e) => setDni(e.target.value.replace(/\D/g, ''))}
+                  className="text-center text-base tracking-[0.75em] bg-transparent border-neutral-700 text-neutral-400 placeholder:text-neutral-700 focus:border-neutral-600 focus:ring-0 rounded-xl h-14 transition-all duration-300"
                   style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
                 />
               </div>
@@ -106,29 +95,22 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
               <div className="flex items-start gap-3 p-3 bg-transparent rounded-xl border border-neutral-800/50">
                 <div className="text-yellow-500 text-sm mt-0.5">🔒</div>
                 <p className="text-neutral-400 text-xs leading-relaxed" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                  Panel protegido con autenticación de dos factores
+                  Tus datos están protegidos con encriptación de grado institucional
                 </p>
               </div>
 
               <Button 
                 type="submit" 
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl h-12 transition-all duration-300 hover:scale-[1.02] text-base mt-2" 
+                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl h-12 transition-all duration-300 hover:scale-[1.02] text-base mt-2" 
                 style={{ 
                   fontFamily: 'Inter, system-ui, sans-serif',
-                  boxShadow: '0 0 30px rgba(220, 38, 38, 0.5)'
+                  boxShadow: '0 10px 40px -10px rgba(220, 38, 38, 0.6)'
                 }}
                 size="lg"
               >
-                Iniciar Sesión
+                Ingresar al Sistema
               </Button>
             </form>
-
-            {/* Demo info */}
-            <div className="text-center pt-2">
-              <p className="text-xs text-neutral-500" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                Demo: usuario "admin" / contraseña "admin123"
-              </p>
-            </div>
 
             {/* Footer de seguridad */}
             <div className="flex items-center justify-center gap-6 pt-4 border-t border-neutral-800/50">
@@ -156,4 +138,4 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
   );
 };
 
-export default AdminLogin;
+export default LoginUser;

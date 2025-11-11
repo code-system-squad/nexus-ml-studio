@@ -30,7 +30,8 @@ export interface Category {
   displayName: string;
   enabled: boolean;
   order: number;
-  description?: string; // 👈 NUEVO CAMPO
+  description?: string;
+  image?: string; // 👈 Campo para imagen en base64
 }
 
 // Initialize default candidates
@@ -123,7 +124,7 @@ const DEFAULT_CANDIDATES: Candidate[] = [
   },
 ];
 
-// Categorías por defecto (CON DESCRIPCIONES)
+// Categorías por defecto (CON DESCRIPCIONES E IMÁGENES)
 const DEFAULT_CATEGORIES: Category[] = [
   { 
     id: 'presidential', 
@@ -131,7 +132,8 @@ const DEFAULT_CATEGORIES: Category[] = [
     displayName: 'Presidencial', 
     enabled: true, 
     order: 1,
-    description: 'Elección para presidente y vicepresidente de la nación' // 👈 NUEVO
+    description: 'Elección para presidente y vicepresidente de la nación',
+    image: '' // Por defecto sin imagen
   },
   { 
     id: 'congress', 
@@ -139,7 +141,8 @@ const DEFAULT_CATEGORIES: Category[] = [
     displayName: 'Congresistas', 
     enabled: true, 
     order: 2,
-    description: 'Representantes ante el Congreso Nacional' // 👈 NUEVO
+    description: 'Representantes ante el Congreso Nacional',
+    image: ''
   },
   { 
     id: 'district', 
@@ -147,7 +150,8 @@ const DEFAULT_CATEGORIES: Category[] = [
     displayName: 'Distrital', 
     enabled: true, 
     order: 3,
-    description: 'Representantes del distrito local y municipal' // 👈 NUEVO
+    description: 'Representantes del distrito local y municipal',
+    image: ''
   },
 ];
 

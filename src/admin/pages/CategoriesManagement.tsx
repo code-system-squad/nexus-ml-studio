@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Edit, Trash2, Power, GripVertical, X, Folder } from "lucide-react";
+import { Plus, Edit, Trash2, Power, GripVertical, X, Folder, Upload, Camera } from "lucide-react";
 import { toast } from "sonner";
 import {
   getCategories,
@@ -22,7 +22,9 @@ const CategoriesManagement = () => {
     displayName: "",
     enabled: true,
     description: "",
+    image: "",
   });
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   useEffect(() => {
     loadCategories();
@@ -41,7 +43,9 @@ const CategoriesManagement = () => {
         displayName: category.displayName,
         enabled: category.enabled,
         description: category.description || "",
+        image: category.image || "",
       });
+      setImagePreview(category.image || "");
     } else {
       setEditingCategory(null);
       setFormData({
@@ -49,7 +53,9 @@ const CategoriesManagement = () => {
         displayName: "",
         enabled: true,
         description: "",
+        image: "",
       });
+      setImagePreview("");
     }
     setIsModalOpen(true);
   };
@@ -62,7 +68,44 @@ const CategoriesManagement = () => {
       displayName: "",
       enabled: true,
       description: "",
+      image: "",
     });
+    setImagePreview("");
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      toast.error("Por favor selecciona un archivo de imagen válido");
+      return;
+    }
+
+    // Validar tamaño (máximo 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("La imagen debe ser menor a 2MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setFormData({ ...formData, image: base64String });
+      setImagePreview(base64String);
+      toast.success("Imagen cargada correctamente");
+    };
+    reader.onerror = () => {
+      toast.error("Error al cargar la imagen");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setFormData({ ...formData, image: "" });
+    setImagePreview("");
+    toast.success("Imagen eliminada");
   };
 
   const handleSaveCategory = () => {
@@ -79,6 +122,7 @@ const CategoriesManagement = () => {
           displayName: formData.displayName,
           enabled: formData.enabled,
           description: formData.description,
+          image: formData.image,
         });
         toast.success("Categoría actualizada");
       } else {
@@ -88,6 +132,7 @@ const CategoriesManagement = () => {
           displayName: formData.displayName,
           enabled: formData.enabled,
           description: formData.description,
+          image: formData.image,
           order: categories.length + 1,
         });
         toast.success("Categoría agregada");
@@ -188,8 +233,16 @@ const CategoriesManagement = () => {
                     </Button>
                   </div>
 
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-xl font-bold text-primary flex-shrink-0">
-                    <Folder className="w-6 h-6" />
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {category.image ? (
+                      <img 
+                        src={category.image} 
+                        alt={category.displayName} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Folder className="w-6 h-6 text-primary" />
+                    )}
                   </div>
 
                   <div className="flex-1">
@@ -263,6 +316,58 @@ const CategoriesManagement = () => {
             </div>
 
             <div className="space-y-4">
+              {/* Imagen de Categoría */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Imagen de Categoría
+                </label>
+                
+                <div className="flex flex-col gap-3">
+                  {imagePreview ? (
+                    <div className="relative w-full h-40 rounded-lg border-2 border-border overflow-hidden bg-muted">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={handleRemoveImage}
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Eliminar
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="w-full h-40 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center bg-muted/50">
+                      <Camera className="w-12 h-12 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">Sin imagen</p>
+                    </div>
+                  )}
+
+                  <label className="cursor-pointer">
+                    <Button variant="outline" className="w-full" asChild>
+                      <span>
+                        <Upload className="w-4 h-4 mr-2" />
+                        {imagePreview ? "Cambiar Imagen" : "Subir Imagen"}
+                      </span>
+                    </Button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <p className="text-xs text-muted-foreground mt-2">
+                  Formatos: JPG, PNG, GIF. Tamaño máximo: 2MB
+                </p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium mb-2">
                   ID de Categoría *

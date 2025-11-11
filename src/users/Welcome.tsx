@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { UserCircle, Shield, Menu, CheckCircle } from "lucide-react";
+import { UserCircle, CheckCircle, Lock, Shield, Zap, Globe, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
 
-const Index = () => {
+const Welcome = () => {
   const navigate = useNavigate();
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
 
@@ -19,17 +19,16 @@ const Index = () => {
   };
 
   return (
-    <div 
-      className="min-h-screen relative overflow-hidden"
-      style={{
-        backgroundImage: "url('/vote-fondo.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-      }}
-    >
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-slate-900/85 backdrop-blur-sm" />
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-red-950">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-red-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '700ms'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1000ms'}}></div>
+      </div>
+
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
 
       {/* Header with Admin Menu */}
       <header className="relative z-20 p-4">
@@ -115,76 +114,235 @@ const Index = () => {
         </Sheet>
       </header>
 
-      {/* Main Content - Centered */}
-      <main className="relative z-10 flex items-center justify-center px-4 py-8 min-h-[calc(100vh-80px)]">
-        <div className="w-full max-w-2xl mx-auto space-y-8 animate-fade-in">
+      {/* Main Content */}
+      <main className="relative z-10 px-4 py-12 min-h-screen">
+        <div className="w-full max-w-7xl mx-auto">
           
-          {/* Hero Content */}
-          <div className="text-center space-y-6">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded-full px-5 py-2 text-sm font-medium backdrop-blur-sm">
-              Democracia Digital
+          {/* Hero Section with Grid Layout */}
+          <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-96px)]">
+            
+            {/* Left Column - Content */}
+            <div className="space-y-8 animate-fade-in">
+              {/* Badge de seguridad */}
+              <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-300 border border-red-500/30 rounded-full px-6 py-2.5 text-sm font-semibold backdrop-blur-sm shadow-lg">
+                <Lock className="w-4 h-4" />
+                Certificado con encriptación avanzada
+              </div>
+              
+              {/* Título principal */}
+              <div className="space-y-4">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+                  <span className="block text-white mb-3">Sistema de Votación</span>
+                  <span className="bg-gradient-to-r from-red-400 via-red-500 to-red-600 bg-clip-text text-transparent">
+                    Digital 2030
+                  </span>
+                </h1>
+                
+                <p className="text-lg md:text-xl text-slate-300 leading-relaxed">
+                  Una plataforma inteligente, segura y transparente para ejercer tu derecho al voto
+                </p>
+              </div>
+
+              {/* Main CTA Button */}
+              <div className="pt-4">
+                <Button
+                  className="bg-red-600 hover:bg-red-500 text-white font-bold text-lg px-10 py-7 rounded-xl shadow-2xl hover:shadow-red-500/50 transition-all transform hover:scale-105"
+                  onClick={handleVoterClick}
+                >
+                  Ingresar como Votante →
+                </Button>
+                <p className="text-sm text-slate-400 mt-3">
+                  Plataforma certificada con auditoría ciudadana continua
+                </p>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-4 pt-6">
+                <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-5 border border-slate-700/50 hover:border-red-500/30 transition-all">
+                  <div className="text-3xl font-bold text-red-400 mb-1">100%</div>
+                  <div className="text-xs text-slate-400">Seguro</div>
+                </div>
+                <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-5 border border-slate-700/50 hover:border-blue-500/30 transition-all">
+                  <div className="text-3xl font-bold text-blue-400 mb-1">24/7</div>
+                  <div className="text-xs text-slate-400">Disponible</div>
+                </div>
+                <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-5 border border-slate-700/50 hover:border-green-500/30 transition-all">
+                  <div className="text-3xl font-bold text-green-400 mb-1">0</div>
+                  <div className="text-xs text-slate-400">Errores</div>
+                </div>
+              </div>
             </div>
-            
-            {/* Main Title */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              <span className="block text-white mb-2">Sistema de</span>
-              <span className="text-blue-400">
-                Votación Electoral
-              </span>
-            </h1>
-            
-            {/* Description */}
-            <p className="text-lg md:text-xl text-slate-300 leading-relaxed max-w-xl mx-auto">
-              Plataforma oficial segura y transparente para ejercer tu derecho al voto
-            </p>
+
+            {/* Right Column - Visual */}
+            <div className="relative lg:block hidden">
+              <div className="relative">
+                {/* Glowing effect behind image */}
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-blue-500/20 rounded-3xl blur-3xl"></div>
+                
+                {/* Image container */}
+                <div className="relative bg-slate-800/30 backdrop-blur-md rounded-3xl p-8 border border-slate-700/50 shadow-2xl">
+                  <img 
+                    src="/hero-voting.jpg" 
+                    alt="Sistema de Votación Digital" 
+                    className="w-full h-auto rounded-2xl shadow-2xl"
+                  />
+                  
+                  {/* Floating badges on image */}
+                  <div className="absolute -top-4 -right-4 bg-green-500/90 backdrop-blur-md text-white px-6 py-3 rounded-full font-bold shadow-xl border border-green-400/50">
+                    ✓ Verificado
+                  </div>
+                  <div className="absolute -bottom-4 -left-4 bg-blue-500/90 backdrop-blur-md text-white px-6 py-3 rounded-full font-bold shadow-xl border border-blue-400/50">
+                    🔒 Encriptado
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Voter Access Card */}
-          <Card className="border-slate-700/50 bg-slate-800/70 backdrop-blur-xl shadow-2xl">
-            <div className="p-8 space-y-6">
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center bg-blue-600/20 backdrop-blur-sm border border-blue-500/30">
-                  <UserCircle className="w-10 h-10 text-blue-400" />
-                </div>
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-bold text-white">
-                    Acceso de Votante
-                  </h2>
-                  <p className="text-base text-slate-400">
-                    Ingresa con tu DNI para ejercer tu voto de manera segura
+          {/* Features Section: ¿Cómo funciona el voto digital? */}
+          <div className="mt-20 space-y-8">
+            <div className="text-center">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                ¿Cómo funciona el <span className="text-red-400">voto digital</span>?
+              </h2>
+              <p className="text-slate-400 text-lg">
+                Tres simples pasos para ejercer tu derecho democrático de forma segura
+              </p>
+            </div>
+
+            {/* Steps Grid */}
+            <div className="grid md:grid-cols-3 gap-8 mt-12">
+              {/* Step 1 */}
+              <Card className="bg-slate-800/50 backdrop-blur-md border-slate-700/50 hover:border-red-500/50 transition-all group">
+                <div className="p-8 space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center border border-red-500/30 group-hover:bg-red-500/30 transition-all">
+                    <Shield className="w-8 h-8 text-red-400" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-5xl font-bold text-red-500/30">01</span>
+                    <h3 className="text-xl font-bold text-white">Autenticación Segura</h3>
+                  </div>
+                  <p className="text-slate-400">
+                    Ingresa con tu DNI digital y verifica tu identidad mediante reconocimiento biométrico avanzado.
                   </p>
                 </div>
+              </Card>
+
+              {/* Step 2 */}
+              <Card className="bg-slate-800/50 backdrop-blur-md border-slate-700/50 hover:border-blue-500/50 transition-all group">
+                <div className="p-8 space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30 group-hover:bg-blue-500/30 transition-all">
+                    <CheckCircle className="w-8 h-8 text-blue-400" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-5xl font-bold text-blue-500/30">02</span>
+                    <h3 className="text-xl font-bold text-white">Selección Guiada</h3>
+                  </div>
+                  <p className="text-slate-400">
+                    Navega por una interfaz intuitiva y elige a tus candidatos con información completa y verificada.
+                  </p>
+                </div>
+              </Card>
+
+              {/* Step 3 */}
+              <Card className="bg-slate-800/50 backdrop-blur-md border-slate-700/50 hover:border-green-500/50 transition-all group">
+                <div className="p-8 space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-green-500/20 flex items-center justify-center border border-green-500/30 group-hover:bg-green-500/30 transition-all">
+                    <Zap className="w-8 h-8 text-green-400" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-5xl font-bold text-green-500/30">03</span>
+                    <h3 className="text-xl font-bold text-white">Envío Cifrado</h3>
+                  </div>
+                  <p className="text-slate-400">
+                    Tu voto se encripta y valida automáticamente, garantizando anonimato y seguridad absoluta.
+                  </p>
+                </div>
+              </Card>
+            </div>
+          </div>
+
+          {/* Advantages Section: Ventajas del Voto Electrónico */}
+          <div className="mt-20 space-y-8">
+            <div className="text-center">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                Ventajas del <span className="text-red-400">Voto Electrónico</span>
+              </h2>
+              <p className="text-slate-400 text-lg">
+                Tecnología de vanguardia al servicio de la democracia moderna
+              </p>
+            </div>
+
+            {/* Advantages Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
+              <Card className="bg-slate-800/50 backdrop-blur-md border-slate-700/50 hover:border-red-500/30 transition-all">
+                <div className="p-6 space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center border border-red-500/30">
+                    <Lock className="w-6 h-6 text-red-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Seguridad Institucional</h3>
+                  <p className="text-sm text-slate-400">
+                    Encriptación de grado militar y protocolos de seguridad auditados por organismos internacionales.
+                  </p>
+                </div>
+              </Card>
+
+              <Card className="bg-slate-800/50 backdrop-blur-md border-slate-700/50 hover:border-blue-500/30 transition-all">
+                <div className="p-6 space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                    <Shield className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Transparencia Total</h3>
+                  <p className="text-sm text-slate-400">
+                    Cada voto es trazable y verificable sin comprometer el anonimato del votante.
+                  </p>
+                </div>
+              </Card>
+
+              <Card className="bg-slate-800/50 backdrop-blur-md border-slate-700/50 hover:border-yellow-500/30 transition-all">
+                <div className="p-6 space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center border border-yellow-500/30">
+                    <Zap className="w-6 h-6 text-yellow-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Rapidez Extrema</h3>
+                  <p className="text-sm text-slate-400">
+                    Resultados en tiempo real con conteo automático y reducción de errores humanos a cero.
+                  </p>
+                </div>
+              </Card>
+
+              <Card className="bg-slate-800/50 backdrop-blur-md border-slate-700/50 hover:border-green-500/30 transition-all">
+                <div className="p-6 space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center border border-green-500/30">
+                    <Globe className="w-6 h-6 text-green-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Acceso Universal</h3>
+                  <p className="text-sm text-slate-400">
+                    Vota desde cualquier lugar del país o del mundo con tu dispositivo móvil o computadora.
+                  </p>
+                </div>
+              </Card>
+            </div>
+
+            {/* Tech Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 max-w-4xl mx-auto">
+              <div className="text-center p-6 bg-slate-800/30 backdrop-blur-md rounded-2xl border border-slate-700/50">
+                <div className="text-4xl font-bold text-red-400 mb-2">Voto</div>
+                <div className="text-sm text-slate-400">Seguro</div>
               </div>
-
-              <Button
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold text-base py-6"
-                onClick={handleVoterClick}
-              >
-                Ingresar como Votante
-              </Button>
-
-              {/* Features List */}
-              <div className="space-y-3 pt-4 border-t border-slate-700/50">
-                <div className="flex items-center gap-3 text-slate-300">
-                  <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                  <span className="text-sm">Verificación de identidad segura</span>
-                </div>
-                <div className="flex items-center gap-3 text-slate-300">
-                  <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                  <span className="text-sm">Proceso simple y guiado</span>
-                </div>
-                <div className="flex items-center gap-3 text-slate-300">
-                  <CheckCircle className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                  <span className="text-sm">Voto confidencial garantizado</span>
-                </div>
+              <div className="text-center p-6 bg-slate-800/30 backdrop-blur-md rounded-2xl border border-slate-700/50">
+                <div className="text-4xl font-bold text-blue-400 mb-2">Proceso</div>
+                <div className="text-sm text-slate-400">Transparente</div>
+              </div>
+              <div className="text-center p-6 bg-slate-800/30 backdrop-blur-md rounded-2xl border border-slate-700/50">
+                <div className="text-4xl font-bold text-yellow-400 mb-2">Integridad</div>
+                <div className="text-sm text-slate-400">Verificada</div>
+              </div>
+              <div className="text-center p-6 bg-slate-800/30 backdrop-blur-md rounded-2xl border border-slate-700/50">
+                <div className="text-4xl font-bold text-green-400 mb-2">Sistema</div>
+                <div className="text-sm text-slate-400">Auditable</div>
               </div>
             </div>
-          </Card>
-
-          {/* Security Badge */}
-          <div className="text-center text-sm text-slate-400 bg-slate-800/40 backdrop-blur-md rounded-lg px-6 py-3 border border-slate-700/50">
-            🔒 Sistema protegido con encriptación de extremo a extremo • Certificado por autoridades electorales
           </div>
         </div>
       </main>
@@ -192,4 +350,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Welcome;

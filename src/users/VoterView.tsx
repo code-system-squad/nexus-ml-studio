@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Building2, Users, MapPin, Check, ArrowLeft, User, Folder } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -15,8 +13,8 @@ import {
   registerVote,
   getVoter,
   type Candidate,
-  type Category
 } from "@/lib/storage";
+import LoginUser from "./LoginUser";
 
 // Mapeo de iconos por defecto
 const DEFAULT_ICONS: Record<string, any> = {
@@ -28,8 +26,9 @@ const DEFAULT_ICONS: Record<string, any> = {
 interface VoteCategory {
   id: string;
   name: string;
-  description: string; // 👈 NUEVO: Agregamos descripción
+  description: string;
   icon: any;
+  image?: string;
   voted: boolean;
 }
 
@@ -47,14 +46,14 @@ const VoterView = () => {
     loadCategories();
   }, []);
 
-  // 👇 MODIFICADO: Cargar descripción de las categorías
   const loadCategories = () => {
     const activeCategories = getActiveCategories();
     const mappedCategories: VoteCategory[] = activeCategories.map(cat => ({
       id: cat.id,
       name: cat.displayName,
-      description: cat.description || 'Categoría de votación', // 👈 NUEVO
+      description: cat.description || 'Categoría de votación',
       icon: DEFAULT_ICONS[cat.id] || Folder,
+      image: cat.image,
       voted: false,
     }));
     setCategories(mappedCategories);
@@ -74,14 +73,9 @@ const VoterView = () => {
     }
   }, [isAuthenticated, dni]);
 
-  const handleDniSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (dni.length === 8) {
-      setIsAuthenticated(true);
-      toast.success("Acceso autorizado");
-    } else {
-      toast.error("DNI inválido. Debe contener 8 dígitos");
-    }
+  const handleLoginSuccess = (userDni: string) => {
+    setDni(userDni);
+    setIsAuthenticated(true);
   };
 
   const handleCategoryClick = (categoryId: string) => {
@@ -113,89 +107,9 @@ const VoterView = () => {
     }
   };
 
+  // Si no está autenticado, mostrar el componente de login
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-[#0f1729]">
-        {/* Fondo con imagen de Machu Picchu */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ 
-            backgroundImage: "url('/fondo_machu_pichu.jpg')",
-            filter: "brightness(0.3) contrast(1.2)"
-          }}
-        />
-        
-        {/* Overlay gradiente para mejor legibilidad */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0f1729]/60 via-[#1a2332]/40 to-[#0f1729]/70" />
-        
-        <Card className="relative z-10 w-full max-w-lg p-10 bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/')}
-            className="absolute top-4 left-4 text-white/70 hover:text-white hover:bg-white/10 rounded-xl"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
-          </Button>
-
-          <div className="space-y-8 mt-6">
-            <div className="text-center space-y-4">
-              {/* Animación con ícono */}
-              <div className="relative w-28 h-28 mx-auto">
-                {/* Anillos animados de fondo */}
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#5b8ef5]/30 to-[#4a7ceb]/30 animate-pulse" />
-                <div className="absolute inset-2 rounded-2xl bg-gradient-to-br from-[#5b8ef5]/20 to-[#4a7ceb]/20 animate-pulse" style={{ animationDelay: '0.3s' }} />
-                
-                {/* Contenedor del ícono */}
-                <div className="absolute inset-4 rounded-2xl bg-gradient-to-br from-[#5b8ef5]/40 to-[#4a7ceb]/40 flex items-center justify-center border border-[#6ba3f5]/40 shadow-2xl shadow-[#5b8ef5]/30 backdrop-blur-sm">
-                  <Building2 className="w-14 h-14 text-white animate-pulse" style={{ animationDuration: '2s' }} />
-                </div>
-                
-                {/* Partículas flotantes */}
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#6ba3f5] rounded-full animate-ping" />
-                <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-[#4a7ceb] rounded-full animate-ping" style={{ animationDelay: '0.5s' }} />
-              </div>
-
-              <h2 className="text-4xl font-bold text-white tracking-tight">Ingreso de Votante</h2>
-              <p className="text-white/60 text-lg">Ingresa tu DNI para continuar con el proceso de votación</p>
-            </div>
-
-            <form onSubmit={handleDniSubmit} className="space-y-6">
-              <div className="space-y-3">
-                <Label htmlFor="dni" className="text-white/80 text-sm font-medium">Documento Nacional de Identidad</Label>
-                <Input
-                  id="dni"
-                  type="text"
-                  placeholder="12345678"
-                  maxLength={8}
-                  value={dni}
-                  onChange={(e) => setDni(e.target.value.replace(/\D/g, ''))}
-                  className="text-center text-3xl tracking-widest bg-white/10 border-white/20 text-white placeholder:text-white/30 focus:border-[#5b8ef5] focus:ring-2 focus:ring-[#5b8ef5]/30 rounded-2xl h-16 backdrop-blur-sm transition-all"
-                />
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full relative overflow-hidden bg-white/10 hover:bg-white/15 backdrop-blur-md border-2 border-white/20 hover:border-white/30 text-white font-semibold rounded-2xl h-12 shadow-2xl shadow-black/20 transition-all hover:shadow-[#5b8ef5]/50 hover:scale-[1.02] group" 
-                size="lg"
-              >
-                {/* Efecto de brillo animado al hacer hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-                
-                {/* Gradiente sutil de fondo */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#5b8ef5]/20 via-[#4a7ceb]/20 to-[#5b8ef5]/20 opacity-50 group-hover:opacity-70 transition-opacity" />
-                
-                <span className="relative z-10 flex items-center justify-center gap-2 text-base">
-                  Ingresar
-                  <ArrowLeft className="w-4 h-4 rotate-180 group-hover:translate-x-1 transition-transform" />
-                </span>
-              </Button>
-            </form>
-          </div>
-        </Card>
-      </div>
-    );
+    return <LoginUser onLoginSuccess={handleLoginSuccess} />;
   }
 
   const allVoted = categories.every(cat => cat.voted);
@@ -205,28 +119,21 @@ const VoterView = () => {
     const currentCategory = categories.find(c => c.id === selectedCategory);
     
     return (
-      <div className="min-h-screen relative overflow-hidden bg-[#0f1729]">
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ 
-            backgroundImage: "url('/fondo_machu_pichu.jpg')",
-            filter: "brightness(0.2) contrast(1.1)"
-          }}
-        />
-        
-        <div className="relative z-10 container mx-auto px-4 py-8">
+      <div className="min-h-screen" style={{
+        background: 'linear-gradient(180deg, #FFF6F6 0%, #F3F3F3 100%)'
+      }}>
+        <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto space-y-8">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-4xl font-bold text-[#5b9cef]">
+                <h1 className="text-4xl font-bold text-gray-800" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
                   Selecciona tu Candidato
                 </h1>
-                <p className="text-[#8b9ab8] mt-2">
+                <p className="text-gray-600 mt-2" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
                   {currentCategory?.name}
                 </p>
-                {/* 👇 NUEVO: Mostrar descripción de la categoría */}
                 {currentCategory?.description && (
-                  <p className="text-[#7a8a9f] text-sm mt-1">
+                  <p className="text-gray-500 text-sm mt-1" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
                     {currentCategory.description}
                   </p>
                 )}
@@ -234,7 +141,11 @@ const VoterView = () => {
               <Button 
                 variant="outline" 
                 onClick={() => setSelectedCategory(null)} 
-                className="border-[#3d4a5f] bg-transparent text-white hover:bg-[#2a3441] hover:text-white hover:border-[#4a5a6f] px-5 py-2 rounded-md"
+                className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 px-5 py-2 rounded-xl transition-all duration-300"
+                style={{ 
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+                }}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver
@@ -245,7 +156,11 @@ const VoterView = () => {
               {candidates.map((candidate) => (
                 <Card
                   key={candidate.id}
-                  className="p-6 bg-[#1e2b3d]/95 backdrop-blur-sm border-[#2d3d52] rounded-2xl hover:border-[#5b8ef5]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[#5b8ef5]/10 cursor-pointer group"
+                  className="p-6 bg-white rounded-2xl hover:scale-[1.03] transition-all duration-300 cursor-pointer group border border-gray-200"
+                  style={{
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04)',
+                    fontFamily: 'Inter, system-ui, sans-serif'
+                  }}
                   onClick={() => handleVote(candidate.id)}
                 >
                   <div className="space-y-4">
@@ -254,27 +169,31 @@ const VoterView = () => {
                         <img 
                           src={candidate.image} 
                           alt={candidate.name}
-                          className="w-24 h-24 rounded-full object-cover border-2 border-[#4a6bb5]/30 group-hover:border-[#5b8ef5]/50 transition-all"
+                          className="w-24 h-24 rounded-full object-cover border-4 border-gray-200 group-hover:border-red-400 transition-all duration-300"
+                          style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}
                         />
-                        {/* Efecto de brillo al hover */}
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-t from-[#5b8ef5]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                     ) : (
-                      <div className="w-24 h-24 rounded-full bg-[#3d5580]/30 flex items-center justify-center mx-auto text-3xl font-bold text-[#6ba3f5] border-2 border-[#4a6bb5]/30 group-hover:border-[#5b8ef5]/50 transition-all">
+                      <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto text-3xl font-bold text-gray-400 border-4 border-gray-200 group-hover:border-red-400 transition-all duration-300">
                         {candidate.name.charAt(0)}
                       </div>
                     )}
                     
                     <div className="text-center space-y-2">
-                      <h3 className="text-xl font-bold text-white">{candidate.name}</h3>
-                      <p className="text-sm text-[#8b9ab8]">{candidate.party}</p>
+                      <h3 className="text-xl font-bold text-gray-800 group-hover:text-red-700 transition-colors duration-300">
+                        {candidate.name}
+                      </h3>
+                      <p className="text-sm text-gray-600">{candidate.party}</p>
                       {candidate.description && (
-                        <p className="text-xs text-[#7a8a9f] line-clamp-2 px-2">
+                        <p className="text-xs text-gray-500 line-clamp-2 px-2">
                           {candidate.description}
                         </p>
                       )}
                     </div>
-                    <Button className="w-full bg-[#5b8ef5] hover:bg-[#4a7ceb] text-white font-medium rounded-xl h-11 shadow-lg transition-all">
+                    <Button 
+                      className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium rounded-xl h-11 transition-all duration-300"
+                      style={{ boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)' }}
+                    >
                       Votar por {candidate.name.split(' ')[0]}
                     </Button>
                   </div>
@@ -288,44 +207,111 @@ const VoterView = () => {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#0f1729]">
-      {/* Fondo con imagen de Machu Picchu */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: "url('/fondo_machu_pichu.jpg')",
-          filter: "brightness(0.2) contrast(1.1)"
-        }}
-      />
-      
-      <div className="relative z-10 container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto space-y-8">
-          {/* Header */}
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-5xl font-bold text-[#5b9cef]">
-                Panel de Votación
-              </h1>
-              <p className="text-[#8b9ab8] mt-2 text-base">DNI: {dni}</p>
+    <div className="min-h-screen" style={{
+      background: 'linear-gradient(180deg, #FFF6F6 0%, #F3F3F3 100%)',
+      fontFamily: 'Inter, system-ui, sans-serif'
+    }}>
+      {/* Banner Superior con Machu Picchu */}
+      <div className="relative h-56 bg-gradient-to-r from-red-600 via-red-500 to-red-600 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-30"
+          style={{ 
+            backgroundImage: "url('/fondo_machu_pichu.jpg')",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-red-600/20 to-red-800/30" />
+        
+        {/* Patrón decorativo peruano */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-full h-full" style={{
+            backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px)'
+          }} />
+        </div>
+        
+        {/* Contenido del banner */}
+        <div className="relative z-10 h-full flex items-center justify-between px-8 max-w-7xl mx-auto">
+          <div className="text-white space-y-2">
+            <h1 className="text-5xl font-bold drop-shadow-2xl tracking-tight">
+              Votaciones Electorales
+            </h1>
+            <p className="text-xl drop-shadow-lg opacity-95 font-light">
+              Sistema de Gestión Electoral del Perú
+            </p>
+          </div>
+          
+          {/* Bandera y elementos decorativos */}
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 transition-transform duration-300 ballot-icon" style={{
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+            }}>
+              <div className="text-4xl">🗳️</div>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/')} 
-              className="border-[#3d4a5f] bg-transparent text-white hover:bg-[#2a3441] hover:text-white hover:border-[#4a5a6f] px-5 py-2 rounded-md"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Salir
-            </Button>
+            <div className="w-28 h-20 bg-white rounded-xl overflow-hidden border-4 border-white/80 hover:scale-105 transition-transform duration-300" style={{
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)'
+            }}>
+              <div className="h-1/3 bg-red-600" />
+              <div className="h-1/3 bg-white" />
+              <div className="h-1/3 bg-red-600" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Botón salir */}
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/')} 
+          className="absolute top-4 right-8 border-white/40 bg-white/15 backdrop-blur-md text-white hover:bg-white/25 hover:border-white/60 px-5 py-2 rounded-xl transition-all duration-300"
+          style={{ boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' }}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Salir
+        </Button>
+      </div>
+
+      {/* Transición suave con degradado */}
+      <div className="h-8 bg-gradient-to-b from-red-600/10 to-transparent" />
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto space-y-10">
+          {/* Header de Sección */}
+          <div className="text-center space-y-3 relative">
+            {/* Decoración de papeletas flotantes */}
+            <div className="absolute top-0 left-1/4 w-8 h-10 opacity-20 ballot-icon" style={{ animationDelay: '0s' }}>
+              📝
+            </div>
+            <div className="absolute top-10 right-1/4 w-8 h-10 opacity-20 ballot-icon" style={{ animationDelay: '1s' }}>
+              🗳️
+            </div>
+            <div className="absolute top-5 left-1/3 w-8 h-10 opacity-20 ballot-icon" style={{ animationDelay: '0.5s' }}>
+              ✓
+            </div>
+            
+            <h2 className="text-4xl font-bold text-gray-800">
+              Módulos de Votación
+            </h2>
+            <p className="text-gray-600 text-base max-w-2xl mx-auto">
+              Seleccione el tipo de elección para acceder al sistema de votación correspondiente
+            </p>
+            <div className="inline-flex items-center gap-2 bg-white px-5 py-2.5 rounded-full border border-gray-200 mt-4" style={{
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)'
+            }}>
+              <User className="w-4 h-4 text-gray-600" />
+              <p className="text-gray-700 text-sm font-medium">DNI: {dni}</p>
+            </div>
           </div>
 
           {/* Mensaje si no hay categorías activas */}
           {categories.length === 0 && (
-            <Card className="p-8 bg-[#1e2b3d]/95 backdrop-blur-sm border-[#2d3d52] rounded-2xl">
-              <div className="text-center space-y-4">
-                <Folder className="w-16 h-16 text-[#6ba3f5] mx-auto" />
+            <Card className="p-10 bg-white rounded-2xl border border-gray-200" style={{
+              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)'
+            }}>
+              <div className="text-center space-y-5">
+                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto">
+                  <Folder className="w-10 h-10 text-gray-400" />
+                </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-white">No hay categorías disponibles</h3>
-                  <p className="text-[#8b9ab8] mt-2">
+                  <h3 className="text-2xl font-bold text-gray-800">No hay categorías disponibles</h3>
+                  <p className="text-gray-600 mt-2 max-w-md mx-auto">
                     Actualmente no hay categorías de votación activas. Contacta al administrador.
                   </p>
                 </div>
@@ -334,60 +320,108 @@ const VoterView = () => {
           )}
 
           {/* Categories Grid */}
-          <div className="grid md:grid-cols-3 gap-6 pt-4">
+          <div className="grid md:grid-cols-3 gap-8 pt-2 pb-12">
             {categories.map((category, index) => {
               const Icon = category.icon;
               return (
                 <Card
                   key={category.id}
-                  className={`p-6 bg-[#1e2b3d]/95 backdrop-blur-sm border-[#2d3d52] rounded-2xl transition-all duration-300 ${
+                  className={`p-8 bg-white rounded-2xl transition-all duration-500 cursor-pointer group border-2 ${
                     category.voted
-                      ? "border-[#5b8ef5]/60 shadow-xl shadow-[#5b8ef5]/10"
-                      : "hover:border-[#5b8ef5]/50 hover:shadow-xl hover:shadow-[#5b8ef5]/10 cursor-pointer"
+                      ? "border-green-400"
+                      : "border-gray-200 hover:border-red-400 hover:-translate-y-2"
                   }`}
-                  style={{ animationDelay: `${index * 0.1}s` }}
+                  style={{ 
+                    animationDelay: `${index * 0.15}s`,
+                    animation: 'fadeInUp 0.6s ease-out forwards',
+                    opacity: 0,
+                    boxShadow: category.voted 
+                      ? '0 10px 40px rgba(34, 197, 94, 0.15), 0 2px 8px rgba(34, 197, 94, 0.08)'
+                      : '0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)'
+                  }}
                   onClick={() => !category.voted && handleCategoryClick(category.id)}
+                  onMouseEnter={(e) => {
+                    if (!category.voted) {
+                      e.currentTarget.style.boxShadow = '0 20px 60px rgba(220, 38, 38, 0.15), 0 4px 12px rgba(220, 38, 38, 0.08)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!category.voted) {
+                      e.currentTarget.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)';
+                    }
+                  }}
                 >
-                  <div className="space-y-5">
-                    <div className={`w-16 h-16 rounded-xl flex items-center justify-center mx-auto ${
+                  <div className="space-y-6">
+                    <div className={`relative w-full aspect-square rounded-2xl flex items-center justify-center overflow-hidden transition-all duration-500 ${
                       category.voted 
-                        ? "bg-[#3d5580]/40 border border-[#5b8ef5]/50" 
-                        : "bg-[#3d5580]/30 border border-[#4a6bb5]/30"
-                    }`}>
-                      {category.voted ? (
-                        <Check className="w-8 h-8 text-[#6ba3f5]" />
+                        ? "bg-gradient-to-br from-green-50 to-green-100 border-4 border-green-300" 
+                        : "bg-gradient-to-br from-gray-50 to-gray-100 border-4 border-gray-200 group-hover:border-red-300"
+                    }`} style={{
+                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
+                    }}>
+                      {category.image ? (
+                        <img 
+                          src={category.image} 
+                          alt={category.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                      ) : category.voted ? (
+                        <div className="relative">
+                          <Check className="w-24 h-24 text-green-600" />
+                          <svg className="absolute inset-0 w-24 h-24" viewBox="0 0 100 100">
+                            <circle 
+                              cx="50" 
+                              cy="50" 
+                              r="45" 
+                              fill="none" 
+                              stroke="#22c55e" 
+                              strokeWidth="3"
+                              strokeDasharray="283"
+                              strokeDashoffset="0"
+                              style={{
+                                animation: 'checkmark 0.6s ease-in-out'
+                              }}
+                            />
+                          </svg>
+                        </div>
                       ) : (
-                        <Icon className="w-8 h-8 text-[#6ba3f5]" />
+                        <Icon className="w-24 h-24 text-gray-400 transition-all duration-500 group-hover:text-red-500 group-hover:scale-110" />
                       )}
                     </div>
 
-                    <div className="text-center space-y-2">
-                      <h3 className="text-xl font-bold text-white">{category.name}</h3>
-                      {/* 👇 MODIFICADO: Mostrar descripción en lugar de estado */}
-                      <p className="text-sm text-[#8b9ab8] line-clamp-2 min-h-[40px]">
+                    <div className="text-center space-y-3">
+                      <h3 className="text-2xl font-bold text-gray-900 transition-colors duration-300 group-hover:text-red-700">
+                        {category.name}
+                      </h3>
+                      <p className="text-base text-gray-600 line-clamp-2 min-h-[48px] px-2">
                         {category.description}
                       </p>
-                      {/* 👇 NUEVO: Badge de estado */}
                       {category.voted && (
-                        <span className="inline-block text-xs bg-[#5b8ef5]/20 text-[#6ba3f5] px-3 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-2 text-sm bg-green-100 text-green-700 px-4 py-2 rounded-full font-semibold" style={{
+                          boxShadow: '0 2px 8px rgba(34, 197, 94, 0.2)'
+                        }}>
+                          <Check className="w-4 h-4" />
                           Voto registrado
                         </span>
                       )}
                     </div>
 
                     <Button
-                      className={`w-full font-medium rounded-xl h-11 transition-all ${
+                      className={`w-full font-semibold rounded-xl h-12 text-base transition-all duration-300 ${
                         category.voted 
-                          ? "bg-slate-700 text-slate-400 cursor-not-allowed hover:bg-slate-700" 
-                          : "bg-[#5b8ef5] hover:bg-[#4a7ceb] text-white shadow-lg"
+                          ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
+                          : "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white hover:scale-105 vote-glow"
                       }`}
+                      style={{
+                        boxShadow: category.voted ? 'none' : '0 4px 14px rgba(220, 38, 38, 0.4)'
+                      }}
                       disabled={category.voted}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleCategoryClick(category.id);
                       }}
                     >
-                      {category.voted ? "Votado" : "Votar Ahora"}
+                      {category.voted ? "✓ Votado" : "🗳️ Acceder a Votación"}
                     </Button>
                   </div>
                 </Card>
@@ -397,15 +431,19 @@ const VoterView = () => {
 
           {/* Summary */}
           {allVoted && categories.length > 0 && (
-            <Card className="p-8 bg-[#1e2b3d]/95 backdrop-blur-sm border-[#5b8ef5]/60 shadow-xl shadow-[#5b8ef5]/10 rounded-2xl">
-              <div className="text-center space-y-4">
-                <div className="w-20 h-20 rounded-full bg-[#3d5580]/40 flex items-center justify-center mx-auto border border-[#5b8ef5]/50">
-                  <Check className="w-10 h-10 text-[#6ba3f5]" />
+            <Card className="p-10 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border-2 border-green-400" style={{
+              boxShadow: '0 10px 40px rgba(34, 197, 94, 0.2), 0 2px 8px rgba(34, 197, 94, 0.1)'
+            }}>
+              <div className="text-center space-y-5">
+                <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center mx-auto border-4 border-green-400" style={{
+                  boxShadow: '0 8px 24px rgba(34, 197, 94, 0.25)'
+                }}>
+                  <Check className="w-12 h-12 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="text-3xl font-bold text-[#5b9cef]">¡Votación Completada!</h3>
-                  <p className="text-[#8b9ab8] mt-2 text-lg">
-                    Has ejercido tu derecho al voto en todas las categorías
+                  <h3 className="text-3xl font-bold text-gray-800">¡Votación Completada!</h3>
+                  <p className="text-gray-600 mt-3 text-lg max-w-xl mx-auto">
+                    Has ejercido tu derecho al voto en todas las categorías disponibles. Gracias por tu participación.
                   </p>
                 </div>
               </div>
@@ -413,6 +451,81 @@ const VoterView = () => {
           )}
         </div>
       </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes checkmark {
+          0% {
+            stroke-dashoffset: 100;
+          }
+          100% {
+            stroke-dashoffset: 0;
+          }
+        }
+        
+        @keyframes ballot-drop {
+          0% {
+            transform: translateY(-100px) rotate(-10deg);
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes pulse-glow {
+          0%, 100% {
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+          }
+          50% {
+            box-shadow: 0 0 40px rgba(220, 38, 38, 0.6);
+          }
+        }
+        
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+        
+        @keyframes confetti {
+          0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(100vh) rotate(720deg);
+            opacity: 0;
+          }
+        }
+        
+        .ballot-icon {
+          animation: float 3s ease-in-out infinite;
+        }
+        
+        .vote-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };
