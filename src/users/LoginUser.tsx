@@ -83,9 +83,13 @@ const LoginUser = ({ onLoginSuccess }: LoginUserProps) => {
                   id="dni"
                   type="text"
                   placeholder="1 2 3 4 5 6 7 8"
-                  maxLength={8}
                   value={dni.split('').join(' ')}
-                  onChange={(e) => setDni(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => {
+                    const numericValue = e.target.value.replace(/\D/g, '');
+                    if (numericValue.length <= 8) {
+                      setDni(numericValue);
+                    }
+                  }}
                   className="text-center text-base tracking-[0.75em] bg-transparent border-neutral-700 text-neutral-400 placeholder:text-neutral-700 focus:border-neutral-600 focus:ring-0 rounded-xl h-14 transition-all duration-300"
                   style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
                 />
