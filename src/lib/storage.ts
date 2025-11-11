@@ -7,7 +7,8 @@ export interface Candidate {
   category: 'presidential' | 'congress' | 'district';
   votes: number;
   enabled?: boolean;
-  description?: string; // 👈 NUEVO CAMPO
+  description?: string;
+  image?: string;
 }
 
 export interface Vote {
@@ -21,6 +22,15 @@ export interface VoterRecord {
   dni: string;
   votedCategories: string[];
   timestamp: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  displayName: string;
+  enabled: boolean;
+  order: number;
+  description?: string; // 👈 NUEVO CAMPO
 }
 
 // Initialize default candidates
@@ -113,6 +123,34 @@ const DEFAULT_CANDIDATES: Candidate[] = [
   },
 ];
 
+// Categorías por defecto (CON DESCRIPCIONES)
+const DEFAULT_CATEGORIES: Category[] = [
+  { 
+    id: 'presidential', 
+    name: 'presidential', 
+    displayName: 'Presidencial', 
+    enabled: true, 
+    order: 1,
+    description: 'Elección para presidente y vicepresidente de la nación' // 👈 NUEVO
+  },
+  { 
+    id: 'congress', 
+    name: 'congress', 
+    displayName: 'Congresistas', 
+    enabled: true, 
+    order: 2,
+    description: 'Representantes ante el Congreso Nacional' // 👈 NUEVO
+  },
+  { 
+    id: 'district', 
+    name: 'district', 
+    displayName: 'Distrital', 
+    enabled: true, 
+    order: 3,
+    description: 'Representantes del distrito local y municipal' // 👈 NUEVO
+  },
+];
+
 // Initialize storage if empty
 export const initializeStorage = () => {
   if (!localStorage.getItem('candidates')) {
@@ -125,6 +163,15 @@ export const initializeStorage = () => {
     localStorage.setItem('voters', JSON.stringify([]));
   }
 };
+
+// Initialize categories
+export const initializeCategories = () => {
+  if (!localStorage.getItem('categories')) {
+    localStorage.setItem('categories', JSON.stringify(DEFAULT_CATEGORIES));
+  }
+};
+
+// ==================== CANDIDATES ====================
 
 // Candidates
 export const getCandidates = (): Candidate[] => {
@@ -156,7 +203,8 @@ export const addCandidate = (candidate: Omit<Candidate, 'id' | 'votes'>): Candid
     id: `${candidate.category}-${Date.now()}`,
     votes: 0,
     enabled: candidate.enabled ?? true,
-    description: candidate.description ?? '', // 👈 INCLUIR DESCRIPCIÓN
+    description: candidate.description ?? '',
+    image: candidate.image ?? '',
   };
   candidates.push(newCandidate);
   localStorage.setItem('candidates', JSON.stringify(candidates));
@@ -183,6 +231,8 @@ export const deleteCandidate = (id: string) => {
   const filteredVotes = votes.filter(v => v.candidateId !== id);
   localStorage.setItem('votes', JSON.stringify(filteredVotes));
 };
+
+// ==================== VOTERS ====================
 
 // Voters
 export const getVoter = (dni: string): VoterRecord | null => {
@@ -236,6 +286,8 @@ export const registerVote = (dni: string, category: string, candidateId: string)
   }
 };
 
+// ==================== STATISTICS ====================
+
 // Statistics
 export const getVoteStats = () => {
   const votes: Vote[] = JSON.parse(localStorage.getItem('votes') || '[]');
@@ -258,10 +310,84 @@ export const getTopCandidates = (category: string, limit: number = 3): Candidate
     .slice(0, limit);
 };
 
+// ==================== CATEGORIES ====================
+
+// Get all categories
+export const getCategories = (): Category[] => {
+  const data = localStorage.getItem('categories');
+  return data ? JSON.parse(data) : DEFAULT_CATEGORIES;
+};
+
+// Get active categories (enabled)
+export const getActiveCategories = (): Category[] => {
+  return getCategories()
+    .filter(c => c.enabled)
+    .sort((a, b) => a.order - b.order);
+};
+
+// Add category
+export const addCategory = (category: Omit<Category, 'id'>): Category => {
+  const categories = getCategories();
+  const newCategory: Category = {
+    ...category,
+    id: `cat-${Date.now()}`,
+  };
+  categories.push(newCategory);
+  localStorage.setItem('categories', JSON.stringify(categories));
+  return newCategory;
+};
+
+// Update category
+export const updateCategory = (id: string, updates: Partial<Category>) => {
+  const categories = getCategories();
+  const index = categories.findIndex(c => c.id === id);
+  if (index !== -1) {
+    categories[index] = { ...categories[index], ...updates };
+    localStorage.setItem('categories', JSON.stringify(categories));
+    return categories[index];
+  }
+  return null;
+};
+
+// Delete category
+export const deleteCategory = (id: string) => {
+  // Verificar si hay candidatos usando esta categoría
+  const candidates = getCandidates();
+  const categoryInUse = candidates.some(c => c.category === id);
+  
+  if (categoryInUse) {
+    throw new Error('No se puede eliminar una categoría con candidatos asociados');
+  }
+  
+  const categories = getCategories().filter(c => c.id !== id);
+  localStorage.setItem('categories', JSON.stringify(categories));
+  
+  // Eliminar votos de esta categoría
+  const votes: Vote[] = JSON.parse(localStorage.getItem('votes') || '[]');
+  const filteredVotes = votes.filter(v => v.category !== id);
+  localStorage.setItem('votes', JSON.stringify(filteredVotes));
+};
+
+// Reorder categories
+export const reorderCategories = (categoryIds: string[]) => {
+  const categories = getCategories();
+  categoryIds.forEach((id, index) => {
+    const category = categories.find(c => c.id === id);
+    if (category) {
+      category.order = index + 1;
+    }
+  });
+  localStorage.setItem('categories', JSON.stringify(categories));
+};
+
+// ==================== SYSTEM ====================
+
 // Reset system (for testing)
 export const resetSystem = () => {
   localStorage.removeItem('candidates');
   localStorage.removeItem('votes');
   localStorage.removeItem('voters');
+  localStorage.removeItem('categories');
   initializeStorage();
+  initializeCategories();
 };

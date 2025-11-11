@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Users, BarChart3, Settings, Brain, Trash2, RefreshCw, Plus, Edit, Power } from "lucide-react";
+import { ArrowLeft, Users, BarChart3, Settings, Brain, Trash2, RefreshCw, Plus, Edit, Power, Upload, X, User, Folder } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
   initializeStorage,
+  initializeCategories,
   getCandidates,
   getVoteStats,
   getTopCandidates,
@@ -17,7 +18,8 @@ import {
   type Candidate,
 } from "@/lib/storage";
 import AdminLogin from "./AdminLogin";
-import DashboardVote from "@/components/DashboardVote"; // 👈 IMPORTAR EL NUEVO COMPONENTE
+import DashboardVote from "@/components/DashboardVote";
+import CategoriesManagement from "./CategoriesManagement";
 
 const AdminView = () => {
   const navigate = useNavigate();
@@ -47,10 +49,13 @@ const AdminView = () => {
     category: "presidential" as "presidential" | "congress" | "district",
     enabled: true,
     description: "",
+    image: "",
   });
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   useEffect(() => {
     initializeStorage();
+    initializeCategories();
   }, []);
 
   useEffect(() => {
@@ -83,6 +88,34 @@ const AdminView = () => {
     toast.success(candidate.enabled ? "Candidato deshabilitado" : "Candidato habilitado");
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("La imagen no debe superar los 2MB");
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        toast.error("Por favor selecciona una imagen válida");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setImagePreview(base64String);
+        setFormData({ ...formData, image: base64String });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview("");
+    setFormData({ ...formData, image: "" });
+  };
+
   const handleOpenModal = (candidate?: Candidate) => {
     if (candidate) {
       setEditingCandidate(candidate);
@@ -92,7 +125,9 @@ const AdminView = () => {
         category: candidate.category,
         enabled: candidate.enabled ?? true,
         description: candidate.description ?? "",
+        image: candidate.image ?? "",
       });
+      setImagePreview(candidate.image ?? "");
     } else {
       setEditingCandidate(null);
       setFormData({
@@ -101,7 +136,9 @@ const AdminView = () => {
         category: "presidential",
         enabled: true,
         description: "",
+        image: "",
       });
+      setImagePreview("");
     }
     setIsModalOpen(true);
   };
@@ -115,7 +152,9 @@ const AdminView = () => {
       category: "presidential",
       enabled: true,
       description: "",
+      image: "",
     });
+    setImagePreview("");
   };
 
   const handleSaveCandidate = () => {
@@ -132,6 +171,7 @@ const AdminView = () => {
         category: formData.category,
         enabled: formData.enabled,
         description: formData.description,
+        image: formData.image,
       });
       toast.success("Candidato actualizado");
     } else {
@@ -141,6 +181,7 @@ const AdminView = () => {
         category: formData.category,
         enabled: formData.enabled,
         description: formData.description,
+        image: formData.image,
       });
       toast.success("Candidato agregado");
     }
@@ -183,7 +224,7 @@ const AdminView = () => {
 
           {/* Main Dashboard */}
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Resumen
@@ -191,6 +232,10 @@ const AdminView = () => {
               <TabsTrigger value="candidates">
                 <Users className="w-4 h-4 mr-2" />
                 Candidatos
+              </TabsTrigger>
+              <TabsTrigger value="categories">
+                <Folder className="w-4 h-4 mr-2" />
+                Categorías
               </TabsTrigger>
               <TabsTrigger value="settings">
                 <Settings className="w-4 h-4 mr-2" />
@@ -202,7 +247,7 @@ const AdminView = () => {
               </TabsTrigger>
             </TabsList>
 
-            {/* TAB: Resumen - AHORA USA EL COMPONENTE DASHBOARDVOTE */}
+            {/* TAB: Resumen */}
             <TabsContent value="overview">
               <DashboardVote 
                 candidates={candidates}
@@ -241,9 +286,17 @@ const AdminView = () => {
                             }`}
                           >
                             <div className="flex items-center gap-4 flex-1">
-                              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-xl font-bold text-primary flex-shrink-0">
-                                {candidate.name.charAt(0)}
-                              </div>
+                              {candidate.image ? (
+                                <img 
+                                  src={candidate.image} 
+                                  alt={candidate.name}
+                                  className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-xl font-bold text-primary flex-shrink-0">
+                                  {candidate.name.charAt(0)}
+                                </div>
+                              )}
                               <div className="flex-1 min-w-0">
                                 <p className="font-bold flex items-center gap-2">
                                   {candidate.name}
@@ -302,6 +355,11 @@ const AdminView = () => {
                   </Card>
                 );
               })}
+            </TabsContent>
+
+            {/* TAB: Categorías */}
+            <TabsContent value="categories">
+              <CategoriesManagement />
             </TabsContent>
 
             {/* TAB: Configuración */}
@@ -447,7 +505,7 @@ const AdminView = () => {
         </div>
       </div>
 
-      {/* Modal de Edición/Creación */}
+      {/* Modal de Edición/Creación de Candidato */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md p-6 bg-card border-border max-h-[90vh] overflow-y-auto">
@@ -456,6 +514,56 @@ const AdminView = () => {
             </h3>
             
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Foto del Candidato</label>
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-32 h-32 rounded-full border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-background">
+                    {imagePreview ? (
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-12 h-12 text-muted-foreground" />
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <label htmlFor="image-upload" className="cursor-pointer">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+                        <Upload className="w-4 h-4" />
+                        <span className="text-sm">
+                          {imagePreview ? "Cambiar" : "Subir"} Imagen
+                        </span>
+                      </div>
+                      <input
+                        id="image-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {imagePreview && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRemoveImage}
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Eliminar
+                      </Button>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-muted-foreground text-center">
+                    Formatos: JPG, PNG, GIF (máx. 2MB)
+                  </p>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium mb-2">Nombre</label>
                 <input

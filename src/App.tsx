@@ -4,14 +4,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DataProvider } from "@/contexts/DataContext";
-import Index from "./pages/Index";
-import VoterView from "./pages/VoterView";
-import AdminView from "./pages/AdminView";
-import DataUpload from "./pages/DataUpload";
-import DataCleaning from "./pages/DataCleaning";
-import ModelTraining from "./pages/ModelTraining";
-import Results from "./pages/Results";
-import NotFound from "./pages/NotFound";
+import Index from "./users/Welcome";
+import VoterView from "./users/VoterView"; 
+import AdminView from "./admin/pages/AdminView";
+import DataUpload from "./admin/pages/DataUpload";
+import DataCleaning from "./admin/pages/DataCleaning";
+import ModelTraining from "./admin/pages/ModelTraining";
+import Results from "./admin/pages/Results";
+import NotFound from "./admin/pages/NotFound";
 
 const queryClient = new QueryClient();
 
