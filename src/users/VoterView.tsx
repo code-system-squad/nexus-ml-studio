@@ -114,26 +114,34 @@ const VoterView = () => {
 
   const allVoted = categories.every(cat => cat.voted);
 
-  // Candidate selection modal
+  // Candidate selection modal - CON FONDO OSCURO MEJORADO
   if (selectedCategory && candidates.length > 0) {
     const currentCategory = categories.find(c => c.id === selectedCategory);
     
     return (
-      <div className="min-h-screen" style={{
-        background: 'linear-gradient(180deg, #FFF6F6 0%, #F3F3F3 100%)'
-      }}>
-        <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-red-950">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-red-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '700ms'}}></div>
+          <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1000ms'}}></div>
+        </div>
+
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+        
+        <div className="relative z-10 container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto space-y-8">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-4xl font-bold text-gray-800" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+                <h1 className="text-4xl font-bold text-white" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
                   Selecciona tu Candidato
                 </h1>
-                <p className="text-gray-600 mt-2" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+                <p className="text-cyan-300 mt-2" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
                   {currentCategory?.name}
                 </p>
                 {currentCategory?.description && (
-                  <p className="text-gray-500 text-sm mt-1" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+                  <p className="text-slate-300 text-sm mt-1" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
                     {currentCategory.description}
                   </p>
                 )}
@@ -141,10 +149,10 @@ const VoterView = () => {
               <Button 
                 variant="outline" 
                 onClick={() => setSelectedCategory(null)} 
-                className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 px-5 py-2 rounded-xl transition-all duration-300"
+                className="border-cyan-500/40 bg-slate-800/60 backdrop-blur-sm text-cyan-300 hover:bg-cyan-500/20 px-5 py-2 rounded-xl transition-all duration-300"
                 style={{ 
                   fontFamily: 'Inter, system-ui, sans-serif',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+                  boxShadow: '0 2px 8px rgba(6, 182, 212, 0.2)'
                 }}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -156,9 +164,9 @@ const VoterView = () => {
               {candidates.map((candidate) => (
                 <Card
                   key={candidate.id}
-                  className="p-6 bg-white rounded-2xl hover:scale-[1.03] transition-all duration-300 cursor-pointer group border border-gray-200"
+                  className="p-6 bg-slate-800/60 backdrop-blur-sm rounded-2xl hover:scale-[1.03] transition-all duration-300 cursor-pointer group border border-slate-600/50 hover:border-cyan-500/60"
                   style={{
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04)',
+                    boxShadow: '0 4px 20px rgba(6, 182, 212, 0.15), 0 1px 4px rgba(6, 182, 212, 0.1)',
                     fontFamily: 'Inter, system-ui, sans-serif'
                   }}
                   onClick={() => handleVote(candidate.id)}
@@ -169,30 +177,30 @@ const VoterView = () => {
                         <img 
                           src={candidate.image} 
                           alt={candidate.name}
-                          className="w-24 h-24 rounded-full object-cover border-4 border-gray-200 group-hover:border-red-400 transition-all duration-300"
-                          style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}
+                          className="w-24 h-24 rounded-full object-cover border-4 border-slate-600 group-hover:border-cyan-400 transition-all duration-300"
+                          style={{ boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)' }}
                         />
                       </div>
                     ) : (
-                      <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto text-3xl font-bold text-gray-400 border-4 border-gray-200 group-hover:border-red-400 transition-all duration-300">
+                      <div className="w-24 h-24 rounded-full bg-slate-700/70 flex items-center justify-center mx-auto text-3xl font-bold text-cyan-400 border-4 border-slate-600 group-hover:border-cyan-400 transition-all duration-300">
                         {candidate.name.charAt(0)}
                       </div>
                     )}
                     
                     <div className="text-center space-y-2">
-                      <h3 className="text-xl font-bold text-gray-800 group-hover:text-red-700 transition-colors duration-300">
+                      <h3 className="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors duration-300">
                         {candidate.name}
                       </h3>
-                      <p className="text-sm text-gray-600">{candidate.party}</p>
+                      <p className="text-sm text-slate-400">{candidate.party}</p>
                       {candidate.description && (
-                        <p className="text-xs text-gray-500 line-clamp-2 px-2">
+                        <p className="text-xs text-slate-500 line-clamp-2 px-2">
                           {candidate.description}
                         </p>
                       )}
                     </div>
                     <Button 
                       className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium rounded-xl h-11 transition-all duration-300"
-                      style={{ boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)' }}
+                      style={{ boxShadow: '0 4px 14px rgba(220, 38, 38, 0.4)' }}
                     >
                       Votar por {candidate.name.split(' ')[0]}
                     </Button>
@@ -207,19 +215,28 @@ const VoterView = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{
-      background: 'linear-gradient(180deg, #FFF6F6 0%, #F3F3F3 100%)',
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-red-950" style={{
       fontFamily: 'Inter, system-ui, sans-serif'
     }}>
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-red-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '700ms'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1000ms'}}></div>
+      </div>
+
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+
       {/* Banner Superior con Machu Picchu */}
-      <div className="relative h-56 bg-gradient-to-r from-red-600 via-red-500 to-red-600 overflow-hidden">
+      <div className="relative z-10 h-56 bg-gradient-to-r from-red-900/40 via-red-800/35 to-red-900/40 overflow-hidden">
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-30"
+          className="absolute inset-0 bg-cover bg-center opacity-15"
           style={{ 
             backgroundImage: "url('/fondo_machu_pichu.jpg')",
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-red-600/20 to-red-800/30" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 via-red-900/20 to-slate-900/70" />
         
         {/* Patrón decorativo peruano */}
         <div className="absolute inset-0 opacity-10">
@@ -269,9 +286,9 @@ const VoterView = () => {
       </div>
 
       {/* Transición suave con degradado */}
-      <div className="h-8 bg-gradient-to-b from-red-600/10 to-transparent" />
+      <div className="h-8 bg-gradient-to-b from-red-900/20 to-transparent" />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="relative z-10 container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto space-y-10">
           {/* Header de Sección */}
           <div className="text-center space-y-3 relative">
@@ -286,32 +303,32 @@ const VoterView = () => {
               ✓
             </div>
             
-            <h2 className="text-4xl font-bold text-gray-800">
+            <h2 className="text-4xl font-bold text-white">
               Módulos de Votación
             </h2>
-            <p className="text-gray-600 text-base max-w-2xl mx-auto">
+            <p className="text-slate-300 text-base max-w-2xl mx-auto">
               Seleccione el tipo de elección para acceder al sistema de votación correspondiente
             </p>
-            <div className="inline-flex items-center gap-2 bg-white px-5 py-2.5 rounded-full border border-gray-200 mt-4" style={{
-              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)'
+            <div className="inline-flex items-center gap-2 bg-slate-800/50 backdrop-blur-md px-5 py-2.5 rounded-full border border-slate-700/50 mt-4" style={{
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.3)'
             }}>
-              <User className="w-4 h-4 text-gray-600" />
-              <p className="text-gray-700 text-sm font-medium">DNI: {dni}</p>
+              <User className="w-4 h-4 text-slate-300" />
+              <p className="text-white text-sm font-medium">DNI: {dni}</p>
             </div>
           </div>
 
           {/* Mensaje si no hay categorías activas */}
           {categories.length === 0 && (
-            <Card className="p-10 bg-white rounded-2xl border border-gray-200" style={{
-              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)'
+            <Card className="p-10 bg-slate-800/50 backdrop-blur-md rounded-2xl border border-slate-700/50" style={{
+              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
             }}>
               <div className="text-center space-y-5">
-                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto">
-                  <Folder className="w-10 h-10 text-gray-400" />
+                <div className="w-20 h-20 rounded-full bg-slate-700/50 flex items-center justify-center mx-auto">
+                  <Folder className="w-10 h-10 text-slate-400" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-800">No hay categorías disponibles</h3>
-                  <p className="text-gray-600 mt-2 max-w-md mx-auto">
+                  <h3 className="text-2xl font-bold text-white">No hay categorías disponibles</h3>
+                  <p className="text-slate-400 mt-2 max-w-md mx-auto">
                     Actualmente no hay categorías de votación activas. Contacta al administrador.
                   </p>
                 </div>
@@ -326,38 +343,38 @@ const VoterView = () => {
               return (
                 <Card
                   key={category.id}
-                  className={`p-8 bg-white rounded-2xl transition-all duration-500 cursor-pointer group border-2 ${
+                  className={`p-8 bg-slate-800/50 backdrop-blur-md rounded-2xl transition-all duration-500 cursor-pointer group border-2 ${
                     category.voted
-                      ? "border-green-400"
-                      : "border-gray-200 hover:border-red-400 hover:-translate-y-2"
+                      ? "border-green-400/50"
+                      : "border-slate-700/50 hover:border-red-400/50 hover:-translate-y-2"
                   }`}
                   style={{ 
                     animationDelay: `${index * 0.15}s`,
                     animation: 'fadeInUp 0.6s ease-out forwards',
                     opacity: 0,
                     boxShadow: category.voted 
-                      ? '0 10px 40px rgba(34, 197, 94, 0.15), 0 2px 8px rgba(34, 197, 94, 0.08)'
-                      : '0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)'
+                      ? '0 10px 40px rgba(34, 197, 94, 0.2), 0 2px 8px rgba(34, 197, 94, 0.15)'
+                      : '0 10px 40px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                   }}
                   onClick={() => !category.voted && handleCategoryClick(category.id)}
                   onMouseEnter={(e) => {
                     if (!category.voted) {
-                      e.currentTarget.style.boxShadow = '0 20px 60px rgba(220, 38, 38, 0.15), 0 4px 12px rgba(220, 38, 38, 0.08)';
+                      e.currentTarget.style.boxShadow = '0 20px 60px rgba(220, 38, 38, 0.25), 0 4px 12px rgba(220, 38, 38, 0.15)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!category.voted) {
-                      e.currentTarget.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)';
+                      e.currentTarget.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)';
                     }
                   }}
                 >
                   <div className="space-y-6">
                     <div className={`relative w-full aspect-square rounded-2xl flex items-center justify-center overflow-hidden transition-all duration-500 ${
                       category.voted 
-                        ? "bg-gradient-to-br from-green-50 to-green-100 border-4 border-green-300" 
-                        : "bg-gradient-to-br from-gray-50 to-gray-100 border-4 border-gray-200 group-hover:border-red-300"
+                        ? "bg-gradient-to-br from-green-900/30 to-green-800/30 border-4 border-green-400/50" 
+                        : "bg-gradient-to-br from-slate-800/50 to-slate-700/50 border-4 border-slate-600/50 group-hover:border-red-400/50"
                     }`} style={{
-                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
+                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
                     }}>
                       {category.image ? (
                         <img 
@@ -385,15 +402,15 @@ const VoterView = () => {
                           </svg>
                         </div>
                       ) : (
-                        <Icon className="w-24 h-24 text-gray-400 transition-all duration-500 group-hover:text-red-500 group-hover:scale-110" />
+                        <Icon className="w-24 h-24 text-slate-400 transition-all duration-500 group-hover:text-red-400 group-hover:scale-110" />
                       )}
                     </div>
 
                     <div className="text-center space-y-3">
-                      <h3 className="text-2xl font-bold text-gray-900 transition-colors duration-300 group-hover:text-red-700">
+                      <h3 className="text-2xl font-bold text-white transition-colors duration-300 group-hover:text-red-400">
                         {category.name}
                       </h3>
-                      <p className="text-base text-gray-600 line-clamp-2 min-h-[48px] px-2">
+                      <p className="text-base text-slate-400 line-clamp-2 min-h-[48px] px-2">
                         {category.description}
                       </p>
                       {category.voted && (
@@ -409,7 +426,7 @@ const VoterView = () => {
                     <Button
                       className={`w-full font-semibold rounded-xl h-12 text-base transition-all duration-300 ${
                         category.voted 
-                          ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
+                          ? "bg-slate-700/50 text-slate-400 cursor-not-allowed border border-slate-600/50" 
                           : "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white hover:scale-105 vote-glow"
                       }`}
                       style={{
@@ -431,18 +448,18 @@ const VoterView = () => {
 
           {/* Summary */}
           {allVoted && categories.length > 0 && (
-            <Card className="p-10 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border-2 border-green-400" style={{
-              boxShadow: '0 10px 40px rgba(34, 197, 94, 0.2), 0 2px 8px rgba(34, 197, 94, 0.1)'
+            <Card className="p-10 bg-gradient-to-br from-green-900/30 to-emerald-900/30 backdrop-blur-md rounded-2xl border-2 border-green-400/50" style={{
+              boxShadow: '0 10px 40px rgba(34, 197, 94, 0.25), 0 2px 8px rgba(34, 197, 94, 0.15)'
             }}>
               <div className="text-center space-y-5">
-                <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center mx-auto border-4 border-green-400" style={{
-                  boxShadow: '0 8px 24px rgba(34, 197, 94, 0.25)'
+                <div className="w-24 h-24 rounded-full bg-slate-800/50 flex items-center justify-center mx-auto border-4 border-green-400/50" style={{
+                  boxShadow: '0 8px 24px rgba(34, 197, 94, 0.3)'
                 }}>
-                  <Check className="w-12 h-12 text-green-600" />
+                  <Check className="w-12 h-12 text-green-400" />
                 </div>
                 <div>
-                  <h3 className="text-3xl font-bold text-gray-800">¡Votación Completada!</h3>
-                  <p className="text-gray-600 mt-3 text-lg max-w-xl mx-auto">
+                  <h3 className="text-3xl font-bold text-white">¡Votación Completada!</h3>
+                  <p className="text-slate-300 mt-3 text-lg max-w-xl mx-auto">
                     Has ejercido tu derecho al voto en todas las categorías disponibles. Gracias por tu participación.
                   </p>
                 </div>
