@@ -78,6 +78,21 @@ const VoterView = () => {
     setIsAuthenticated(true);
   };
 
+  const handleLogout = () => {
+    // Limpiar el estado de autenticación
+    setIsAuthenticated(false);
+    setDni("");
+    setSelectedCategory(null);
+    setCandidates([]);
+    setCategories([]);
+    
+    // Mostrar mensaje de confirmación
+    toast.success("Sesión cerrada exitosamente");
+    
+    // Navegar a la página principal
+    navigate('/');
+  };
+
   const handleCategoryClick = (categoryId: string) => {
     if (hasVoted(dni, categoryId)) {
       toast.error("Ya has votado en esta categoría");
@@ -273,10 +288,10 @@ const VoterView = () => {
           </div>
         </div>
         
-        {/* Botón salir */}
+        {/* Botón salir - CORREGIDO */}
         <Button 
           variant="outline" 
-          onClick={() => navigate('/')} 
+          onClick={handleLogout}
           className="absolute top-4 right-8 border-white/40 bg-white/15 backdrop-blur-md text-white hover:bg-white/25 hover:border-white/60 px-5 py-2 rounded-xl transition-all duration-300"
           style={{ boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' }}
         >
