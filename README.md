@@ -43,6 +43,7 @@ Sistema de votación electoral diseñado para facilitar procesos electorales dig
 ---
 
 ## 🚀 Tecnologías Utilizadas
+<<<<<<< HEAD
 
 ### Frontend
 - **React 18.3** - Biblioteca de UI
@@ -91,11 +92,138 @@ cd proyecto-frontend-votacion
 # 3. Instalar dependencias
 npm install
 
+=======
+
+### Frontend
+- **React 18.3** - Biblioteca de UI
+- **TypeScript 5.8** - Tipado estático
+- **Vite 5.4** - Build tool y dev server
+- **React Router DOM 6.30** - Navegación
+
+### UI/UX
+- **Tailwind CSS 3.4** - Framework de estilos
+- **shadcn/ui** - Componentes de UI
+- **Radix UI** - Primitivos accesibles
+- **Lucide React** - Iconos
+- **Sonner** - Notificaciones toast
+
+### Gestión de Estado
+- **React Context API** - Estado global
+- **TanStack Query 5.83** - Gestión de datos asíncronos
+- **React Hook Form 7.61** - Manejo de formularios
+- **Zod 3.25** - Validación de esquemas
+
+### Procesamiento de Datos
+- **PapaParse 5.5** - Parsing de CSV
+- **Lodash 4.17** - Utilidades de datos
+- **date-fns 3.6** - Manejo de fechas
+
+### Visualización
+- **Recharts 2.15** - Gráficos y estadísticas
+
+---
+
+## 📦 Instalación
+
+### Requisitos Previos
+- Node.js 16 o superior
+- npm (viene con Node.js) - [instalar con nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+### Pasos de Instalación
+
+```bash
+# 1. Clonar el repositorio
+git clone <YOUR_GIT_URL>
+
+# 2. Navegar al directorio del proyecto
+cd <YOUR_PROJECT_NAME>
+
+# 3. Instalar dependencias
+npm install
+
+>>>>>>> f1241ceb685ead9687e4d4c3add4b4c270372c84
 # 4. Iniciar el servidor de desarrollo
 npm run dev
 ```
 
 El proyecto estará disponible en `http://localhost:5173`
+
+<<<<<<< HEAD
+---
+
+## 🎯 Uso del Sistema
+
+### Acceso como Votante
+
+1. Navegar a la ruta `/voter`
+2. Ingresar DNI para autenticación
+3. Seleccionar la categoría de votación
+4. Elegir candidato y confirmar voto
+5. El sistema valida que no se vote dos veces en la misma categoría
+
+### Acceso como Administrador
+
+1. Navegar a la ruta `/admin`
+2. Ingresar credenciales de administrador
+3. Acceder al panel de control con 5 pestañas:
+   - **Resumen**: Dashboard con estadísticas generales
+   - **Candidatos**: Gestión CRUD de candidatos
+   - **Categorías**: Administración de tipos de votación
+   - **Configuración**: Opciones del sistema
+   - **Machine Learning**: Pipeline de análisis predictivo
+
+### Pipeline de Machine Learning
+
+1. **Cargar Datos** (`/upload`): Importar datasets en CSV/Excel
+2. **Limpiar Datos** (`/clean`): Normalizar y procesar información
+3. **Entrenar Modelos** (`/train`): Configurar y ejecutar algoritmos
+4. **Ver Resultados** (`/results`): Analizar métricas y predicciones
+
+---
+
+## 🗂️ Estructura del Proyecto
+
+```
+src/
+├── admin/
+│   └── pages/
+│       ├── AdminView.tsx          # Panel principal de administración
+│       ├── AdminLogin.tsx         # Login de administradores
+│       ├── CategoriesManagement.tsx
+│       ├── DataUpload.tsx         # Carga de datos para ML
+│       ├── DataCleaning.tsx       # Limpieza de datos
+│       ├── ModelTraining.tsx      # Entrenamiento de modelos
+│       ├── Results.tsx            # Visualización de resultados
+│       └── NotFound.tsx
+├── users/
+│   ├── Welcome.tsx                # Página de inicio
+│   ├── VoterView.tsx              # Vista de votación
+│   └── LoginUser.tsx              # Login de votantes
+├── components/
+│   ├── ui/                        # Componentes de shadcn/ui
+│   └── DashboardVote.tsx          # Dashboard de estadísticas
+├── contexts/
+│   └── DataContext.tsx            # Context API para estado global
+├── lib/
+│   └── storage.ts                 # Funciones de localStorage
+├── hooks/                         # Custom hooks
+└── App.tsx                        # Componente principal con rutas
+```
+
+=======
+### Editar Directamente en GitHub
+
+1. Navega al archivo que deseas editar
+2. Haz clic en el botón "Edit" (ícono de lápiz) en la parte superior derecha
+3. Realiza tus cambios y haz commit
+
+### Usar GitHub Codespaces
+
+1. Ve a la página principal del repositorio
+2. Haz clic en el botón "Code" (botón verde)
+3. Selecciona la pestaña "Codespaces"
+4. Haz clic en "New codespace" para lanzar un entorno de desarrollo en la nube
+5. Edita archivos directamente y haz commit cuando termines
 
 ---
 
@@ -158,6 +286,7 @@ src/
 └── App.tsx                        # Componente principal con rutas
 ```
 
+>>>>>>> f1241ceb685ead9687e4d4c3add4b4c270372c84
 ---
 
 ## 🔧 Scripts Disponibles
@@ -297,9 +426,38 @@ El pipeline de ML permite:
 4. Detectar anomalías
 5. Generar reportes con métricas
 
+<<<<<<< HEAD
 ---
 
 ## 🤝 Contribuciones
+=======
+## 🚀 Deployment
+
+### Opciones de Deployment
+
+Puedes desplegar este proyecto en varias plataformas:
+
+#### Vercel
+```bash
+npm run build
+```
+Luego conecta tu repositorio en [Vercel](https://vercel.com)
+
+#### Netlify
+```bash
+npm run build
+```
+Arrastra la carpeta `dist` a [Netlify](https://netlify.com) o conecta tu repositorio
+
+#### GitHub Pages
+Configura un workflow de GitHub Actions para desplegar automáticamente
+
+#### Servidor Propio
+```bash
+npm run build
+```
+Los archivos estáticos se generarán en la carpeta `dist/` lista para servir
+>>>>>>> f1241ceb685ead9687e4d4c3add4b4c270372c84
 
 Las contribuciones son bienvenidas. Por favor:
 1. Fork el proyecto
@@ -337,4 +495,8 @@ Para reportar problemas o sugerencias, por favor abre un [issue](../../issues) e
 
 ---
 
+<<<<<<< HEAD
 **⚡ Sistema de Votación Electoral - Modernizando la Democracia Digital**
+=======
+**⚡ Sistema de Votación Electoral - Modernizando la Democracia Digital**
+>>>>>>> f1241ceb685ead9687e4d4c3add4b4c270372c84
