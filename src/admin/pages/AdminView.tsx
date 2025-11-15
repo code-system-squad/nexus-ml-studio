@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Users, BarChart3, Settings, Brain, Trash2, RefreshCw, Plus, Edit, Power, Upload, X, User, Folder } from "lucide-react";
+import { ArrowLeft, Users, BarChart3, Settings, Brain, Trash2, RefreshCw, Plus, Edit, Power, Upload, X, User, Folder, Trophy, Lock, UnlockKeyhole } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -20,13 +20,18 @@ import {
 import AdminLogin from "./AdminLogin";
 import DashboardVote from "@/components/DashboardVote";
 import CategoriesManagement from "./CategoriesManagement";
-
+import ResultsModal from "@/components/ResultsModal";
+import CloseVotingModal from "@/components/CloseVotingModal";
 const AdminView = () => {
   const navigate = useNavigate();
   // ✅ CAMBIO 1: Leer el estado de autenticación desde localStorage
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('adminAuth') === 'true';
   });
+  // ✅ AGREGAR AQUÍ
+const [isVotingClosed, setIsVotingClosed] = useState(() => {
+  return localStorage.getItem('votingClosed') === 'true';
+});
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [stats, setStats] = useState({ 
     totalVotes: 0, 
@@ -56,6 +61,10 @@ const AdminView = () => {
   });
   const [imagePreview, setImagePreview] = useState<string>("");
 
+  // Estado para el modal de resultados
+  const [showResultsModal, setShowResultsModal] = useState(false);
+// Estado para el modal de cerrar votaciones
+const [showCloseVotingModal, setShowCloseVotingModal] = useState(false);
   useEffect(() => {
     initializeStorage();
     initializeCategories();
@@ -66,6 +75,17 @@ const AdminView = () => {
       loadData();
     }
   }, [isAuthenticated]);
+  // ✅ AGREGAR AQUÍ
+useEffect(() => {
+  const checkVotingStatus = () => {
+    setIsVotingClosed(localStorage.getItem('votingClosed') === 'true');
+  };
+  
+  checkVotingStatus();
+  window.addEventListener('storage', checkVotingStatus);
+  
+  return () => window.removeEventListener('storage', checkVotingStatus);
+}, []);
 
   const loadData = () => {
     setCandidates(getCandidates());
@@ -223,19 +243,44 @@ const AdminView = () => {
       <div className="relative z-10 container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-4xl font-bold text-white">
-                Panel Administrativo
-              </h1>
-              <p className="text-muted-foreground mt-2">Sistema de gestión electoral</p>
-            </div>
-            {/* ✅ CAMBIO 4: Botón Salir con la nueva función */}
-            <Button variant="outline" onClick={handleLogout}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Salir
-            </Button>
-          </div>
+<div className="flex justify-between items-center">
+  <div>
+    <h1 className="text-4xl font-bold text-white">
+      Panel Administrativo
+    </h1>
+    <p className="text-muted-foreground mt-2">Sistema de gestión electoral</p>
+  </div>
+  <div className="flex gap-3">
+    {isVotingClosed ? (
+      <Button 
+        onClick={() => setShowCloseVotingModal(true)}
+        className="shadow-glow bg-green-600 hover:bg-green-700"
+      >
+        <UnlockKeyhole className="w-4 h-4 mr-2" />
+        Abrir Votaciones
+      </Button>
+    ) : (
+      <Button 
+        onClick={() => setShowCloseVotingModal(true)}
+        className="shadow-glow bg-destructive hover:bg-destructive/90"
+      >
+        <Lock className="w-4 h-4 mr-2" />
+        Cerrar Votaciones
+      </Button>
+    )}
+    <Button 
+      onClick={() => setShowResultsModal(true)}
+      variant="outline"
+    >
+      <Trophy className="w-4 h-4 mr-2" />
+      Ver Ganadores
+    </Button>
+    <Button variant="outline" onClick={handleLogout}>
+      <ArrowLeft className="w-4 h-4 mr-2" />
+      Salir
+    </Button>
+  </div>
+</div>
 
           {/* Main Dashboard */}
           <Tabs defaultValue="overview" className="space-y-6">
@@ -650,6 +695,21 @@ const AdminView = () => {
           </Card>
         </div>
       )}
+
+     {/* Modal de Cerrar Votaciones */}
+{showCloseVotingModal && (
+  <CloseVotingModal 
+    onClose={() => {
+      setShowCloseVotingModal(false);
+      setIsVotingClosed(localStorage.getItem('votingClosed') === 'true');
+    }} 
+  />
+)}
+
+{/* Modal de Resultados */}
+{showResultsModal && (
+  <ResultsModal onClose={() => setShowResultsModal(false)} />
+)}
     </div>
   );
 };

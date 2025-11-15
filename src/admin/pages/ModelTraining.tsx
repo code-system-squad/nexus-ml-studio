@@ -7,8 +7,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Brain, Settings, Play } from "lucide-react";
-import { useData, type TrainingResults } from "@/contexts/DataContext";
+import { Brain, Settings, Play, Vote, CheckCircle, AlertCircle } from "lucide-react";
+import { useData, type TrainingResults, type DataRow } from "@/contexts/DataContext";
+import { getCandidates, registerVote, getVoter } from "@/lib/storage";
+
+interface VoteProcessingResult {
+  processedVotes: number;
+  duplicates: number;
+  errors: number;
+  errorDetails: string[];
+  votesByCategory: {
+    presidential: number;
+    congress: number;
+    district: number;
+  };
+}
 
 const ModelTraining = () => {
   const navigate = useNavigate();
@@ -23,6 +36,8 @@ const ModelTraining = () => {
   const [trainSplit, setTrainSplit] = useState("80");
   const [testSplit, setTestSplit] = useState("20");
   const [isTraining, setIsTraining] = useState(false);
+  const [trainingStage, setTrainingStage] = useState("");
+  const [voteResults, setVoteResults] = useState<VoteProcessingResult | null>(null);
 
   // Redirigir si no hay datos limpios
   useEffect(() => {
@@ -36,16 +51,100 @@ const ModelTraining = () => {
     }
   }, [cleanedData, navigate, toast]);
 
-  const simulateTraining = (): Promise<TrainingResults> => {
+  // Función para procesar y registrar votos en el sistema electoral
+  const processVotes = async (data: DataRow[]): Promise<VoteProcessingResult> => {
+    const result: VoteProcessingResult = {
+      processedVotes: 0,
+      duplicates: 0,
+      errors: 0,
+      errorDetails: [],
+      votesByCategory: {
+        presidential: 0,
+        congress: 0,
+        district: 0,
+      }
+    };
+
+    const candidates = getCandidates();
+
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+
+      // Extraer datos (soporta diferentes nombres de columnas)
+      const dni = String(row.dni || row.documento || row.votante_dni || '').trim();
+      const categoria = String(row.categoria || row.category || row.tipo_voto || '').toLowerCase();
+      const candidatoNombre = String(row.candidato || row.nombre_candidato || row.candidate || '').trim();
+
+      // Validar datos requeridos
+      if (!dni || !categoria || !candidatoNombre) {
+        result.errors++;
+        result.errorDetails.push(`Fila ${i + 1}: Datos incompletos`);
+        continue;
+      }
+
+      // Normalizar categoría
+      let categoryNormalized = '';
+      if (categoria.includes('presid')) {
+        categoryNormalized = 'presidential';
+      } else if (categoria.includes('congres')) {
+        categoryNormalized = 'congress';
+      } else if (categoria.includes('distrit')) {
+        categoryNormalized = 'district';
+      } else {
+        result.errors++;
+        result.errorDetails.push(`Fila ${i + 1}: Categoría inválida "${categoria}"`);
+        continue;
+      }
+
+      // Verificar si ya votó en esta categoría
+      const voter = getVoter(dni);
+      if (voter && voter.votedCategories.includes(categoryNormalized)) {
+        result.duplicates++;
+        continue;
+      }
+
+      // Buscar candidato por nombre
+      const candidate = candidates.find(c => 
+        c.name.toLowerCase() === candidatoNombre.toLowerCase() && 
+        c.category === categoryNormalized &&
+        c.enabled !== false
+      );
+
+      if (!candidate) {
+        result.errors++;
+        result.errorDetails.push(`Fila ${i + 1}: Candidato "${candidatoNombre}" no encontrado o deshabilitado en ${categoryNormalized}`);
+        continue;
+      }
+
+      // Registrar voto
+      try {
+        registerVote(dni, categoryNormalized, candidate.id);
+        result.processedVotes++;
+        result.votesByCategory[categoryNormalized as keyof typeof result.votesByCategory]++;
+      } catch (error) {
+        result.errors++;
+        result.errorDetails.push(`Fila ${i + 1}: Error al registrar voto - ${error}`);
+      }
+
+      // Pequeña pausa cada 10 votos para mostrar progreso
+      if (i % 10 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    }
+
+    return result;
+  };
+
+  const simulateTraining = async (votingResults: VoteProcessingResult): Promise<TrainingResults> => {
     return new Promise((resolve) => {
       const totalEpochs = epochs[0];
       const dataSize = cleanedData?.length || 100;
       
-      // Generar métricas más realistas basadas en el dataset
-      const baseAccuracy = 85 + Math.random() * 10; // Entre 85% y 95%
-      const history = [];
+      // Métricas basadas en el éxito del procesamiento de votos
+      const successRate = votingResults.processedVotes / (cleanedData?.length || 1);
+      const baseAccuracy = 75 + (successRate * 20); // Entre 75% y 95%
       
-      // Simular progreso del entrenamiento
+      const history = [];
       const numSteps = Math.min(5, Math.ceil(totalEpochs / 10));
       const stepSize = Math.floor(totalEpochs / numSteps);
       
@@ -53,12 +152,10 @@ const ModelTraining = () => {
         const epoch = i === numSteps ? totalEpochs : i * stepSize;
         const progress = i / numSteps;
         
-        // Loss disminuye con el tiempo
         const loss = 0.5 - (progress * 0.42) + (Math.random() * 0.05);
         const valLoss = loss + 0.05 + (Math.random() * 0.05);
         
-        // Accuracy aumenta con el tiempo
-        const accuracy = 80 + (progress * 14.5) + (Math.random() * 2);
+        const accuracy = baseAccuracy + (progress * 10) + (Math.random() * 2);
         const valAccuracy = accuracy - 2 + (Math.random() * 3);
         
         history.push({
@@ -70,14 +167,12 @@ const ModelTraining = () => {
         });
       }
 
-      // Calcular métricas finales
       const finalAccuracy = history[history.length - 1].valAccuracy;
       const precision = finalAccuracy - 2 + (Math.random() * 3);
       const recall = finalAccuracy - 3 + (Math.random() * 4);
       const f1Score = (2 * precision * recall) / (precision + recall);
 
-      // Calcular tiempo de entrenamiento basado en dataset y épocas
-      const timePerEpoch = Math.ceil(dataSize / 100); // Segundos por época
+      const timePerEpoch = Math.ceil(dataSize / 100);
       const totalSeconds = timePerEpoch * totalEpochs;
       const minutes = Math.floor(totalSeconds / 60);
       const seconds = totalSeconds % 60;
@@ -94,7 +189,7 @@ const ModelTraining = () => {
         trainingTime,
       };
 
-      setTimeout(() => resolve(results), 3000);
+      setTimeout(() => resolve(results), 2000);
     });
   };
 
@@ -121,29 +216,65 @@ const ModelTraining = () => {
     setTrainingConfig(config);
 
     setIsTraining(true);
-    toast({
-      title: "Entrenamiento iniciado",
-      description: `Entrenando modelo ${modelType.replace('_', ' ')} con ${cleanedData.length} registros...`,
-    });
     
     try {
-      const results = await simulateTraining();
+      // ETAPA 1: Procesamiento y registro de votos
+      setTrainingStage("Procesando y registrando votos en el sistema...");
+      toast({
+        title: "Iniciando procesamiento",
+        description: `Registrando ${cleanedData.length} votos en el sistema electoral...`,
+      });
+      
+      const votingResults = await processVotes(cleanedData);
+      setVoteResults(votingResults);
+
+      if (votingResults.processedVotes > 0) {
+        toast({
+          title: "✅ Votos registrados",
+          description: `${votingResults.processedVotes} votos agregados al sistema`,
+        });
+      }
+
+      if (votingResults.duplicates > 0) {
+        toast({
+          title: "⚠️ Votos duplicados",
+          description: `${votingResults.duplicates} votos duplicados fueron ignorados`,
+        });
+      }
+
+      if (votingResults.errors > 0) {
+        toast({
+          title: "⚠️ Errores encontrados",
+          description: `${votingResults.errors} errores durante el procesamiento`,
+          variant: "destructive",
+        });
+      }
+
+      // ETAPA 2: Entrenamiento del modelo
+      setTrainingStage("Entrenando modelo de Machine Learning...");
+      toast({
+        title: "Entrenando modelo",
+        description: `Modelo ${modelType.replace('_', ' ')} con ${votingResults.processedVotes} votos válidos...`,
+      });
+      
+      const results = await simulateTraining(votingResults);
       setTrainingResults(results);
       
       toast({
-        title: "Entrenamiento completado",
-        description: `Modelo entrenado con éxito. Accuracy: ${results.metrics.accuracy}%`,
+        title: "🎉 Proceso completado",
+        description: `Modelo entrenado exitosamente. Accuracy: ${results.metrics.accuracy}%`,
       });
       
       navigate("/results");
     } catch (error) {
       toast({
         title: "Error",
-        description: "Hubo un problema durante el entrenamiento",
+        description: "Hubo un problema durante el procesamiento",
         variant: "destructive",
       });
     } finally {
       setIsTraining(false);
+      setTrainingStage("");
     }
   };
 
@@ -159,9 +290,97 @@ const ModelTraining = () => {
             Entrenar Modelo
           </h1>
           <p className="text-muted-foreground mt-2">
-            Configura y entrena tu modelo de Machine Learning con {cleanedData.length.toLocaleString()} registros
+            Procesa votos y entrena el modelo con {cleanedData.length.toLocaleString()} registros
           </p>
         </div>
+
+        {/* Mostrar resultados del procesamiento de votos si está disponible */}
+        {voteResults && (
+          <Card className="border-border bg-gradient-card border-green-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center text-green-500">
+                <Vote className="w-5 h-5 mr-2" />
+                Resultados del Procesamiento de Votos
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-4 bg-green-500/10 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span className="text-sm text-muted-foreground">Procesados</span>
+                  </div>
+                  <p className="text-2xl font-bold text-green-500">{voteResults.processedVotes}</p>
+                </div>
+                <div className="p-4 bg-yellow-500/10 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertCircle className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm text-muted-foreground">Duplicados</span>
+                  </div>
+                  <p className="text-2xl font-bold text-yellow-500">{voteResults.duplicates}</p>
+                </div>
+                <div className="p-4 bg-red-500/10 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertCircle className="w-4 h-4 text-red-500" />
+                    <span className="text-sm text-muted-foreground">Errores</span>
+                  </div>
+                  <p className="text-2xl font-bold text-red-500">{voteResults.errors}</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Votos por Categoría:</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="p-2 bg-card rounded text-center">
+                    <p className="text-xs text-muted-foreground">Presidencial</p>
+                    <p className="text-lg font-bold text-primary">{voteResults.votesByCategory.presidential}</p>
+                  </div>
+                  <div className="p-2 bg-card rounded text-center">
+                    <p className="text-xs text-muted-foreground">Congresistas</p>
+                    <p className="text-lg font-bold text-primary">{voteResults.votesByCategory.congress}</p>
+                  </div>
+                  <div className="p-2 bg-card rounded text-center">
+                    <p className="text-xs text-muted-foreground">Distrital</p>
+                    <p className="text-lg font-bold text-primary">{voteResults.votesByCategory.district}</p>
+                  </div>
+                </div>
+              </div>
+
+              {voteResults.errorDetails.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-red-500">Errores Detectados:</p>
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {voteResults.errorDetails.slice(0, 5).map((error, index) => (
+                      <p key={index} className="text-xs bg-red-500/10 p-2 rounded">
+                        {error}
+                      </p>
+                    ))}
+                    {voteResults.errorDetails.length > 5 && (
+                      <p className="text-xs text-muted-foreground text-center">
+                        ... y {voteResults.errorDetails.length - 5} errores más
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Estado de entrenamiento */}
+        {isTraining && (
+          <Card className="border-border bg-gradient-card border-primary/30">
+            <CardContent className="py-6">
+              <div className="flex items-center gap-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <div>
+                  <p className="font-medium">{trainingStage}</p>
+                  <p className="text-sm text-muted-foreground">Por favor espera...</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="border-border bg-gradient-card">
           <CardHeader>
@@ -176,7 +395,7 @@ const ModelTraining = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Framework</Label>
-              <Select value={framework} onValueChange={setFramework}>
+              <Select value={framework} onValueChange={setFramework} disabled={isTraining}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un framework" />
                 </SelectTrigger>
@@ -190,7 +409,7 @@ const ModelTraining = () => {
 
             <div className="space-y-2">
               <Label>Tipo de Modelo</Label>
-              <Select value={modelType} onValueChange={setModelType}>
+              <Select value={modelType} onValueChange={setModelType} disabled={isTraining}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un modelo" />
                 </SelectTrigger>
@@ -247,6 +466,7 @@ const ModelTraining = () => {
                 max={200}
                 step={10}
                 className="w-full"
+                disabled={isTraining}
               />
             </div>
 
@@ -262,6 +482,7 @@ const ModelTraining = () => {
                 max={128}
                 step={8}
                 className="w-full"
+                disabled={isTraining}
               />
             </div>
 
@@ -274,6 +495,7 @@ const ModelTraining = () => {
                 value={learningRate}
                 onChange={(e) => setLearningRate(e.target.value)}
                 placeholder="0.001"
+                disabled={isTraining}
               />
             </div>
 
@@ -289,6 +511,7 @@ const ModelTraining = () => {
                     setTrainSplit(e.target.value);
                     setTestSplit((100 - val).toString());
                   }}
+                  disabled={isTraining}
                 />
               </div>
               <div className="space-y-2">
@@ -302,6 +525,7 @@ const ModelTraining = () => {
                     setTestSplit(e.target.value);
                     setTrainSplit((100 - val).toString());
                   }}
+                  disabled={isTraining}
                 />
               </div>
             </div>
@@ -314,7 +538,7 @@ const ModelTraining = () => {
           </Button>
           <Button size="lg" onClick={handleTrain} className="shadow-glow" disabled={isTraining}>
             <Play className="w-4 h-4 mr-2" />
-            {isTraining ? "Entrenando..." : "Iniciar Entrenamiento"}
+            {isTraining ? "Procesando..." : "Procesar Votos y Entrenar"}
           </Button>
         </div>
       </div>

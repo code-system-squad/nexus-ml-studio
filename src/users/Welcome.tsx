@@ -1,36 +1,152 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { UserCircle, CheckCircle, Lock, Shield, Zap, Globe, Menu } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { CheckCircle, Lock, Shield, Zap, Globe, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  duration: number;
+  delay: number;
+  opacity: number;
+}
 
 const Welcome = () => {
-  const navigate = useNavigate();
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
+  const [particles, setParticles] = useState<Particle[]>([]);
+
+  useEffect(() => {
+    const generateParticles = () => {
+      const newParticles: Particle[] = [];
+      for (let i = 0; i < 50; i++) {
+        newParticles.push({
+          id: i,
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          size: Math.random() * 8 + 3, // Aumentado de 4+1 a 8+3 (ahora 3-11px)
+          duration: Math.random() * 20 + 15,
+          delay: Math.random() * 5,
+          opacity: Math.random() * 0.6 + 0.3, // Aumentado de 0.5+0.2 a 0.6+0.3 (más visibles)
+        });
+      }
+      setParticles(newParticles);
+    };
+
+    generateParticles();
+  }, []);
 
   const handleVoterClick = () => {
-    navigate('/voter');
+    console.log('Navegando a votante...');
   };
 
   const handleAdminClick = () => {
-    navigate('/admin');
+    console.log('Navegando a admin...');
     setIsAdminMenuOpen(false);
   };
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-red-950">
-      {/* Animated background elements */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px) translateX(0px);
+          }
+          25% {
+            transform: translateY(-30px) translateX(15px);
+          }
+          50% {
+            transform: translateY(-60px) translateX(-15px);
+          }
+          75% {
+            transform: translateY(-30px) translateX(10px);
+          }
+        }
+        
+        .particle {
+          animation: float var(--duration) infinite ease-in-out;
+          animation-delay: var(--delay);
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes gradientShift {
+          0%, 100% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.02);
+          }
+        }
+
+        .title-animated {
+          animation: fadeInUp 1s ease-out;
+        }
+
+        .title-gradient {
+          background: linear-gradient(90deg, #f87171, #ef4444, #dc2626, #b91c1c, #ef4444, #f87171);
+          background-size: 200% auto;
+          animation: gradientShift 3s ease infinite;
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle-animated {
+          animation: fadeInUp 1s ease-out 0.3s backwards;
+        }
+
+        .button-animated {
+          animation: fadeInUp 1s ease-out 0.6s backwards;
+        }
+      `}} />
+
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {particles.map((particle) => (
+          <div
+            key={particle.id}
+            className="particle absolute rounded-full bg-white"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              opacity: particle.opacity,
+              '--duration': `${particle.duration}s`,
+              '--delay': `${particle.delay}s`,
+            } as React.CSSProperties & { '--duration': string; '--delay': string }}
+          />
+        ))}
+      </div>
+
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-72 h-72 bg-red-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '700ms'}}></div>
         <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1000ms'}}></div>
       </div>
 
-      {/* Grid pattern overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
 
-      {/* Header with Admin Menu */}
       <header className="relative z-20 p-4">
         <Sheet open={isAdminMenuOpen} onOpenChange={setIsAdminMenuOpen}>
           <SheetTrigger asChild>
@@ -59,7 +175,6 @@ const Welcome = () => {
             </SheetHeader>
 
             <div className="space-y-6">
-              {/* Admin Login Card */}
               <Card className="border-slate-700 bg-slate-700/50 backdrop-blur-md">
                 <div className="p-6 text-center space-y-4">
                   <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center bg-amber-500/20 border border-amber-500/30">
@@ -89,7 +204,6 @@ const Welcome = () => {
                 </div>
               </Card>
 
-              {/* Admin Features */}
               <div className="space-y-3 pt-4">
                 <p className="text-sm font-semibold text-slate-300 uppercase tracking-wide">
                   Funciones Administrativas
@@ -114,37 +228,31 @@ const Welcome = () => {
         </Sheet>
       </header>
 
-      {/* Main Content */}
       <main className="relative z-10 px-4 py-12 min-h-screen">
         <div className="w-full max-w-7xl mx-auto">
           
-          {/* Hero Section with Grid Layout */}
           <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-96px)]">
             
-            {/* Left Column - Content */}
-            <div className="space-y-8 animate-fade-in">
-              {/* Badge de seguridad */}
+            <div className="space-y-8">
               <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-300 border border-red-500/30 rounded-full px-6 py-2.5 text-sm font-semibold backdrop-blur-sm shadow-lg">
                 <Lock className="w-4 h-4" />
                 Certificado con encriptación avanzada
               </div>
               
-              {/* Título principal */}
               <div className="space-y-4">
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                  <span className="block text-white mb-3">Sistema de Votación</span>
-                  <span className="bg-gradient-to-r from-red-400 via-red-500 to-red-600 bg-clip-text text-transparent">
+                  <span className="block text-white mb-3 title-animated">Sistema de Votación</span>
+                  <span className="title-gradient title-animated">
                     Digital 2030
                   </span>
                 </h1>
                 
-                <p className="text-lg md:text-xl text-slate-300 leading-relaxed">
+                <p className="text-lg md:text-xl text-slate-300 leading-relaxed subtitle-animated">
                   Una plataforma inteligente, segura y transparente para ejercer tu derecho al voto
                 </p>
               </div>
 
-              {/* Main CTA Button */}
-              <div className="pt-4">
+              <div className="pt-4 button-animated">
                 <Button
                   className="bg-red-600 hover:bg-red-500 text-white font-bold text-lg px-10 py-7 rounded-xl shadow-2xl hover:shadow-red-500/50 transition-all transform hover:scale-105"
                   onClick={handleVoterClick}
@@ -156,7 +264,6 @@ const Welcome = () => {
                 </p>
               </div>
 
-              {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-4 pt-6">
                 <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-5 border border-slate-700/50 hover:border-red-500/30 transition-all">
                   <div className="text-3xl font-bold text-red-400 mb-1">100%</div>
@@ -173,13 +280,10 @@ const Welcome = () => {
               </div>
             </div>
 
-            {/* Right Column - Visual */}
             <div className="relative lg:block hidden">
               <div className="relative">
-                {/* Glowing effect behind image */}
                 <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-blue-500/20 rounded-3xl blur-3xl"></div>
                 
-                {/* Image container */}
                 <div className="relative bg-slate-800/30 backdrop-blur-md rounded-3xl p-8 border border-slate-700/50 shadow-2xl">
                   <img 
                     src="/hero-voting.jpg" 
@@ -187,7 +291,6 @@ const Welcome = () => {
                     className="w-full h-auto rounded-2xl shadow-2xl"
                   />
                   
-                  {/* Floating badges on image */}
                   <div className="absolute -top-4 -right-4 bg-green-500/90 backdrop-blur-md text-white px-6 py-3 rounded-full font-bold shadow-xl border border-green-400/50">
                     ✓ Verificado
                   </div>
@@ -199,7 +302,6 @@ const Welcome = () => {
             </div>
           </div>
 
-          {/* Features Section: ¿Cómo funciona el voto digital? */}
           <div className="mt-20 space-y-8">
             <div className="text-center">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
@@ -210,9 +312,7 @@ const Welcome = () => {
               </p>
             </div>
 
-            {/* Steps Grid */}
             <div className="grid md:grid-cols-3 gap-8 mt-12">
-              {/* Step 1 */}
               <Card className="bg-slate-800/50 backdrop-blur-md border-slate-700/50 hover:border-red-500/50 transition-all group">
                 <div className="p-8 space-y-4">
                   <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center border border-red-500/30 group-hover:bg-red-500/30 transition-all">
@@ -228,7 +328,6 @@ const Welcome = () => {
                 </div>
               </Card>
 
-              {/* Step 2 */}
               <Card className="bg-slate-800/50 backdrop-blur-md border-slate-700/50 hover:border-blue-500/50 transition-all group">
                 <div className="p-8 space-y-4">
                   <div className="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30 group-hover:bg-blue-500/30 transition-all">
@@ -244,7 +343,6 @@ const Welcome = () => {
                 </div>
               </Card>
 
-              {/* Step 3 */}
               <Card className="bg-slate-800/50 backdrop-blur-md border-slate-700/50 hover:border-green-500/50 transition-all group">
                 <div className="p-8 space-y-4">
                   <div className="w-16 h-16 rounded-2xl bg-green-500/20 flex items-center justify-center border border-green-500/30 group-hover:bg-green-500/30 transition-all">
@@ -262,7 +360,6 @@ const Welcome = () => {
             </div>
           </div>
 
-          {/* Advantages Section: Ventajas del Voto Electrónico */}
           <div className="mt-20 space-y-8">
             <div className="text-center">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
@@ -273,7 +370,6 @@ const Welcome = () => {
               </p>
             </div>
 
-            {/* Advantages Grid */}
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
               <Card className="bg-slate-800/50 backdrop-blur-md border-slate-700/50 hover:border-red-500/30 transition-all">
                 <div className="p-6 space-y-3">
@@ -324,7 +420,6 @@ const Welcome = () => {
               </Card>
             </div>
 
-            {/* Tech Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 max-w-4xl mx-auto">
               <div className="text-center p-6 bg-slate-800/30 backdrop-blur-md rounded-2xl border border-slate-700/50">
                 <div className="text-4xl font-bold text-red-400 mb-2">Voto</div>
