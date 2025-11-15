@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { CheckCircle, Lock, Shield, Zap, Globe, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface Particle {
   id: number;
@@ -15,21 +16,22 @@ interface Particle {
 }
 
 const Welcome = () => {
+  const navigate = useNavigate();
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
     const generateParticles = () => {
       const newParticles: Particle[] = [];
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 60; i++) { // Aumentado de 50 a 60 partículas
         newParticles.push({
           id: i,
           x: Math.random() * 100,
           y: Math.random() * 100,
-          size: Math.random() * 8 + 3, // Aumentado de 4+1 a 8+3 (ahora 3-11px)
+          size: Math.random() * 12 + 4, // Aumentado a 4-16px (mucho más grandes)
           duration: Math.random() * 20 + 15,
           delay: Math.random() * 5,
-          opacity: Math.random() * 0.6 + 0.3, // Aumentado de 0.5+0.2 a 0.6+0.3 (más visibles)
+          opacity: Math.random() * 0.7 + 0.4, // Aumentado a 0.4-1.0 (muy visibles)
         });
       }
       setParticles(newParticles);
@@ -39,11 +41,11 @@ const Welcome = () => {
   }, []);
 
   const handleVoterClick = () => {
-    console.log('Navegando a votante...');
+    navigate('/voter');
   };
 
   const handleAdminClick = () => {
-    console.log('Navegando a admin...');
+    navigate('/admin');
     setIsAdminMenuOpen(false);
   };
 
@@ -125,13 +127,14 @@ const Welcome = () => {
         {particles.map((particle) => (
           <div
             key={particle.id}
-            className="particle absolute rounded-full bg-white"
+            className="particle absolute rounded-full bg-white shadow-lg"
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
               width: `${particle.size}px`,
               height: `${particle.size}px`,
               opacity: particle.opacity,
+              boxShadow: `0 0 ${particle.size * 2}px rgba(255, 255, 255, ${particle.opacity * 0.5})`,
               '--duration': `${particle.duration}s`,
               '--delay': `${particle.delay}s`,
             } as React.CSSProperties & { '--duration': string; '--delay': string }}
@@ -289,6 +292,10 @@ const Welcome = () => {
                     src="/hero-voting.jpg" 
                     alt="Sistema de Votación Digital" 
                     className="w-full h-auto rounded-2xl shadow-2xl"
+                    onError={(e) => {
+                      console.error('Error cargando imagen desde:', e.currentTarget.src);
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                   
                   <div className="absolute -top-4 -right-4 bg-green-500/90 backdrop-blur-md text-white px-6 py-3 rounded-full font-bold shadow-xl border border-green-400/50">
