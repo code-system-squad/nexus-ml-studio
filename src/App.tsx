@@ -23,13 +23,24 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Ruta principal - Página de bienvenida */}
             <Route path="/" element={<Index />} />
+            
+            {/* Rutas de login */}
+            <Route path="/voter-login" element={<VoterView />} />
+            <Route path="/admin-login" element={<AdminView />} />
+            
+            {/* Rutas alternativas (mantener compatibilidad) */}
             <Route path="/voter" element={<VoterView />} />
             <Route path="/admin" element={<AdminView />} />
+            
+            {/* Rutas administrativas */}
             <Route path="/upload" element={<DataUpload />} />
             <Route path="/clean" element={<DataCleaning />} />
             <Route path="/train" element={<ModelTraining />} />
             <Route path="/results" element={<Results />} />
+            
+            {/* Ruta 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

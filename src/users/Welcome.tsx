@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { CheckCircle, Lock, Shield, Zap, Globe, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useState, useEffect, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import Spline from '@splinetool/react-spline';
 
 interface Particle {
@@ -16,6 +17,7 @@ interface Particle {
 }
 
 const Welcome = () => {
+  const navigate = useNavigate();
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
 
@@ -40,11 +42,11 @@ const Welcome = () => {
   }, []);
 
   const handleVoterClick = () => {
-    console.log('Navegando a votante');
+    navigate('/voter-login');
   };
 
   const handleAdminClick = () => {
-    console.log('Navegando a admin');
+    navigate('/admin-login');
     setIsAdminMenuOpen(false);
   };
 
