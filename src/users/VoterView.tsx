@@ -15,7 +15,8 @@ import {
   type Candidate,
 } from "@/lib/storage";
 import LoginUser from "./LoginUser";
-import "./VoterView.css"; // 👈 Importar estilos separados
+import AIAssistant from "@/components/AIAssistant"; // 👈 Importar el chatbot
+import "./VoterView.css";
 
 // Mapeo de iconos por defecto
 const DEFAULT_ICONS: Record<string, any> = {
@@ -228,6 +229,9 @@ const VoterView = () => {
             </div>
           </div>
         </div>
+
+        {/* Chatbot flotante - Componente AIAssistant */}
+        <AIAssistant />
       </div>
     );
   }
@@ -462,6 +466,9 @@ const VoterView = () => {
           )}
         </div>
       </div>
+
+      {/* Chatbot flotante - Componente AIAssistant */}
+      <AIAssistant />
     </div>
   );
 };
