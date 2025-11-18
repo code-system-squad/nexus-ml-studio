@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { useState, useEffect, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import Spline from '@splinetool/react-spline';
+import AIAssistant from '../components/AIAssistant';
 
 interface Particle {
   id: number;
@@ -294,7 +295,7 @@ const Welcome = () => {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-blue-500/20 rounded-3xl blur-3xl"></div>
                 
-                <div className="relative bg-slate-800/30 backdrop-blur-md rounded-3xl p-8 border border-slate-700/50 shadow-2xl overflow-hidden" style={{ height: '600px' }}>
+                <div className="relative bg-slate-800/30 backdrop-blur-md rounded-3xl p-8 border border-slate-700/50 shadow-2xl overflow-hidden" style={{ height: '700px' }}>
                   <Suspense fallback={
                     <div className="w-full h-full flex items-center justify-center">
                       <div className="text-white text-lg">Cargando robot 3D...</div>
@@ -462,6 +463,9 @@ const Welcome = () => {
           </div>
         </div>
       </main>
+
+      {/* Componente de Asistente IA */}
+      <AIAssistant />
     </div>
   );
 };
