@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle, Lock, Shield, Zap, Globe, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, Suspense } from "react";
+import Spline from '@splinetool/react-spline';
 
 interface Particle {
   id: number;
@@ -16,22 +16,21 @@ interface Particle {
 }
 
 const Welcome = () => {
-  const navigate = useNavigate();
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
     const generateParticles = () => {
       const newParticles: Particle[] = [];
-      for (let i = 0; i < 60; i++) { // Aumentado de 50 a 60 partículas
+      for (let i = 0; i < 60; i++) {
         newParticles.push({
           id: i,
           x: Math.random() * 100,
           y: Math.random() * 100,
-          size: Math.random() * 12 + 4, // Aumentado a 4-16px (mucho más grandes)
+          size: Math.random() * 12 + 4,
           duration: Math.random() * 20 + 15,
           delay: Math.random() * 5,
-          opacity: Math.random() * 0.7 + 0.4, // Aumentado a 0.4-1.0 (muy visibles)
+          opacity: Math.random() * 0.7 + 0.4,
         });
       }
       setParticles(newParticles);
@@ -41,11 +40,11 @@ const Welcome = () => {
   }, []);
 
   const handleVoterClick = () => {
-    navigate('/voter');
+    console.log('Navegando a votante');
   };
 
   const handleAdminClick = () => {
-    navigate('/admin');
+    console.log('Navegando a admin');
     setIsAdminMenuOpen(false);
   };
 
@@ -92,15 +91,6 @@ const Welcome = () => {
           }
         }
 
-        @keyframes pulse {
-          0%, 100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.02);
-          }
-        }
-
         .title-animated {
           animation: fadeInUp 1s ease-out;
         }
@@ -121,8 +111,17 @@ const Welcome = () => {
         .button-animated {
           animation: fadeInUp 1s ease-out 0.6s backwards;
         }
+
+        .spline-container {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
       `}} />
 
+      {/* Partículas flotantes */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {particles.map((particle) => (
           <div
@@ -142,14 +141,17 @@ const Welcome = () => {
         ))}
       </div>
 
+      {/* Efectos de fondo */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-72 h-72 bg-red-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '700ms'}}></div>
         <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1000ms'}}></div>
       </div>
 
+      {/* Grid pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
 
+      {/* Header */}
       <header className="relative z-20 p-4">
         <Sheet open={isAdminMenuOpen} onOpenChange={setIsAdminMenuOpen}>
           <SheetTrigger asChild>
@@ -231,11 +233,13 @@ const Welcome = () => {
         </Sheet>
       </header>
 
+      {/* Main Content */}
       <main className="relative z-10 px-4 py-12 min-h-screen">
         <div className="w-full max-w-7xl mx-auto">
           
           <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-96px)]">
             
+            {/* Contenido izquierdo */}
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-300 border border-red-500/30 rounded-full px-6 py-2.5 text-sm font-semibold backdrop-blur-sm shadow-lg">
                 <Lock className="w-4 h-4" />
@@ -283,32 +287,39 @@ const Welcome = () => {
               </div>
             </div>
 
+            {/* Robot 3D de Spline - Lado derecho */}
             <div className="relative lg:block hidden">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-blue-500/20 rounded-3xl blur-3xl"></div>
                 
-                <div className="relative bg-slate-800/30 backdrop-blur-md rounded-3xl p-8 border border-slate-700/50 shadow-2xl">
-                  <img 
-                    src="/hero-voting.jpg" 
-                    alt="Sistema de Votación Digital" 
-                    className="w-full h-auto rounded-2xl shadow-2xl"
-                    onError={(e) => {
-                      console.error('Error cargando imagen desde:', e.currentTarget.src);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
+                <div className="relative bg-slate-800/30 backdrop-blur-md rounded-3xl p-8 border border-slate-700/50 shadow-2xl overflow-hidden" style={{ height: '600px' }}>
+                  <Suspense fallback={
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-white text-lg">Cargando robot 3D...</div>
+                    </div>
+                  }>
+                    <div className="spline-container">
+                      <Spline scene="https://prod.spline.design/TKaiFILe4Ry2TsI6/scene.splinecode" />
+                    </div>
+                  </Suspense>
                   
-                  <div className="absolute -top-4 -right-4 bg-green-500/90 backdrop-blur-md text-white px-6 py-3 rounded-full font-bold shadow-xl border border-green-400/50">
-                    ✓ Verificado
+                  <div className="absolute -top-4 -right-4 bg-green-500/90 backdrop-blur-md text-white px-6 py-3 rounded-full font-bold shadow-xl border border-green-400/50 z-10">
+                    ✓ IA Activa
                   </div>
-                  <div className="absolute -bottom-4 -left-4 bg-blue-500/90 backdrop-blur-md text-white px-6 py-3 rounded-full font-bold shadow-xl border border-blue-400/50">
-                    🔒 Encriptado
+                  
+                  {/* Badge para cubrir la marca de agua de Spline */}
+                  <div className="absolute bottom-12 right-4 bg-blue-500/95 backdrop-blur-md text-white px-8 py-3 rounded-full font-bold shadow-xl border border-blue-400/50 z-50">
+                    🤖 Asistente Virtual
                   </div>
+                  
+                  {/* Overlay adicional para asegurar que la marca de agua esté cubierta */}
+                  <div className="absolute bottom-0 right-0 w-48 h-24 bg-gradient-to-t from-slate-800/90 to-transparent z-40"></div>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Sección: Cómo funciona */}
           <div className="mt-20 space-y-8">
             <div className="text-center">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
@@ -367,6 +378,7 @@ const Welcome = () => {
             </div>
           </div>
 
+          {/* Sección: Ventajas */}
           <div className="mt-20 space-y-8">
             <div className="text-center">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
